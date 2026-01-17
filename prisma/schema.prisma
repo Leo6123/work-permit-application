@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model WorkPermitApplication {
+  id                    String        @id @default(cuid())
+  applicantName         String        // 廠內申請人(承攬作業監工)
+  department            String        // 部門
+  workTimeStart         DateTime      // 作業時間開始
+  workTimeEnd           DateTime      // 作業時間結束
+  workArea              String        // 施工區域
+  workContent           String        // 施工內容
+  contractorInfo        String        // 承攬商資訊 (JSON string)
+  hazardFactors         String        // 工作環境危害因素 (JSON string)
+  hazardousOperations   String        // 危險性作業 (JSON string)
+  personnelInfo         String        // 入廠作業人員 (JSON string)
+  status                String        @default("pending_ehs") // pending_ehs, pending_manager, approved, rejected
+  ehsManagerEmail       String?       // EHS Manager Email
+  departmentManagerEmail String?      // 部門主管 Email
+  applicantEmail        String?       // 申請人 Email
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  approvalLogs          ApprovalLog[]
+}
+
+model ApprovalLog {
+  id            String                 @id @default(cuid())
+  applicationId String
+  application   WorkPermitApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  approverType  String                 // ehs_manager | department_manager
+  approverEmail String
+  action        String                 // approve | reject
+  comment       String?                // 附註說明（拒絕時必填，特別是 EHS Manager）
+  approvedAt    DateTime               @default(now())
+}
