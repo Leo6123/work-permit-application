@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applicationFormSchema } from "@/lib/validation";
-import { notifyEHSManager } from "@/lib/notifications";
-import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail } from "@/lib/config";
+import { notifyEHSManager, notifyAreaSupervisor } from "@/lib/notifications";
+import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail, getAreaSupervisorEmail } from "@/lib/config";
 import { generateWorkOrderNumber, getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 
 // GET: 查詢申請列表
@@ -71,9 +71,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 驗證動火作業詳細資訊：當選擇「是」時，必須填寫詳細資訊
+    if (data.hazardFactors.hotWork && data.hazardousOperations.hotWork === "yes") {
+      if (!data.hazardousOperations.hotWorkDetails) {
+        return NextResponse.json(
+          { error: "當選擇動火作業「是」時，必須填寫動火作業詳細資訊" },
+          { status: 400 }
+        );
+      }
+      // 當選擇承包商時，承包商名稱為必填
+      if (data.hazardousOperations.hotWorkDetails.personnelType === "contractor") {
+        if (!data.hazardousOperations.hotWorkDetails.contractorName || 
+            data.hazardousOperations.hotWorkDetails.contractorName.trim() === "") {
+          return NextResponse.json(
+            { error: "當選擇承包商時，承包商名稱為必填欄位" },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // 獲取 EHS Manager 和部門主管 Email
     const ehsManagerEmail = data.ehsManagerEmail || process.env.EHS_MANAGER_EMAIL || "ehs.manager@company.com";
     const departmentManagerEmail = data.departmentManagerEmail || getDepartmentManagerEmail(data.department);
+
+    // 檢查是否有動火作業且選擇「是」
+    const hasHotWork = data.hazardFactors.hotWork && data.hazardousOperations.hotWork === "yes";
+    let areaSupervisorEmail: string | null = null;
+    let initialStatus = "pending_ehs";
+
+    // 如果有動火作業，需要先由作業區域主管審核
+    if (hasHotWork && data.hazardousOperations.hotWorkDetails) {
+      const areaSupervisor = data.hazardousOperations.hotWorkDetails.areaSupervisor;
+      areaSupervisorEmail = getAreaSupervisorEmail(areaSupervisor);
+      
+      if (!areaSupervisorEmail) {
+        return NextResponse.json(
+          { error: `找不到作業區域主管「${areaSupervisor}」的 Email 配置` },
+          { status: 400 }
+        );
+      }
+      
+      initialStatus = "pending_area_supervisor";
+    }
 
     // 處理施工人員：已經在 validation 中轉換為陣列
     const contractorInfo = {
@@ -94,24 +134,42 @@ export async function POST(request: NextRequest) {
         workContent: data.workContent,
         contractorInfo: JSON.stringify(contractorInfo),
         hazardFactors: JSON.stringify(data.hazardFactors),
-        hazardousOperations: JSON.stringify(data.hazardousOperations),
+        hazardousOperations: JSON.stringify({
+          ...data.hazardousOperations,
+          // hotWorkDetails 已包含在 hazardousOperations 中，會一起被 JSON.stringify
+        }),
         personnelInfo: JSON.stringify(data.personnelInfo),
-        status: "pending_ehs",
+        status: initialStatus,
         ehsManagerEmail,
         departmentManagerEmail,
+        areaSupervisorEmail,
         applicantEmail: data.applicantEmail || null,
       },
     });
 
-    // 通知 EHS Manager
-    notifyEHSManager(
-      ehsManagerEmail,
-      application.id,
-      data.applicantName,
-      data.department,
-      data.workArea,
-      workOrderNumber
-    );
+    // 根據是否有動火作業決定通知對象
+    if (hasHotWork && areaSupervisorEmail && data.hazardousOperations.hotWorkDetails) {
+      // 通知作業區域主管
+      notifyAreaSupervisor(
+        areaSupervisorEmail,
+        application.id,
+        data.applicantName,
+        data.department,
+        data.workArea,
+        data.hazardousOperations.hotWorkDetails.areaSupervisor,
+        workOrderNumber
+      );
+    } else {
+      // 通知 EHS Manager（原有流程）
+      notifyEHSManager(
+        ehsManagerEmail,
+        application.id,
+        data.applicantName,
+        data.department,
+        data.workArea,
+        workOrderNumber
+      );
+    }
 
     return NextResponse.json(
       { 

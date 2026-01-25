@@ -21,6 +21,7 @@ export default function Home() {
       setLoading(true);
       const statusMap: Record<string, string> = {
         all: "",
+        area_supervisor: "pending_area_supervisor",
         ehs: "pending_ehs",
         manager: "pending_manager",
         approved: "approved",
@@ -42,18 +43,21 @@ export default function Home() {
   // 最新申請：顯示所有申請數量（按創建時間排序，最新的在前）
   const latestApplications = applications.length;
 
+  const areaSupervisorPending = applications.filter((app) => app.status === "pending_area_supervisor").length;
   const ehsPending = applications.filter((app) => app.status === "pending_ehs").length;
   // 批准施工：只統計已通過全部流程的申請（status === "approved"），拒絕的申請不納入
   const approvedApplications = applications.filter((app) => app.status === "approved").length;
 
   const stats = [
     { label: "最新申請", value: latestApplications, icon: FileText, color: "text-blue-400", border: "border-blue-500/30" },
+    { label: "作業區域主管待審", value: areaSupervisorPending, icon: Activity, color: "text-purple-400", border: "border-purple-500/30" },
     { label: "EHS 待審", value: ehsPending, icon: Activity, color: "text-amber-400", border: "border-amber-500/30" },
     { label: "批准施工", value: approvedApplications, icon: Shield, color: "text-emerald-400", border: "border-emerald-500/30" },
   ];
 
   const tabs = [
     { id: "all", label: "全部案件" },
+    { id: "area_supervisor", label: "待作業區域主管審核" },
     { id: "ehs", label: "待 EHS 審核" },
     { id: "manager", label: "待主管審核" },
     { id: "approved", label: "已通過/批准施工" },
@@ -79,6 +83,7 @@ export default function Home() {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; icon: any; color: string; bgColor: string }> = {
+      pending_area_supervisor: { label: "待作業區域主管審核", icon: Clock, color: "text-purple-400", bgColor: "bg-purple-500/10 border-purple-500/30" },
       pending_ehs: { label: "待 EHS 審核", icon: Clock, color: "text-amber-400", bgColor: "bg-amber-500/10 border-amber-500/30" },
       pending_manager: { label: "待主管審核", icon: Activity, color: "text-blue-400", bgColor: "bg-blue-500/10 border-blue-500/30" },
       approved: { label: "已通過", icon: CheckCircle, color: "text-emerald-400", bgColor: "bg-emerald-500/10 border-emerald-500/30" },
@@ -147,7 +152,7 @@ export default function Home() {
 
       <main className="relative max-w-7xl mx-auto p-6 z-10 space-y-8">
         {/* 儀表板數據卡 (HUD Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, idx) => (
             <div
               key={idx}

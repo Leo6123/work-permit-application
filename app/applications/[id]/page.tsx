@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Shield, ArrowLeft, CheckCircle, Clock, XCircle, AlertCircle, User, Building, Calendar, MapPin, FileText, Users, Hash, Download } from "lucide-react";
+import { Shield, ArrowLeft, CheckCircle, Clock, XCircle, AlertCircle, User, Building, Calendar, MapPin, FileText, Users, Hash, Download, Printer } from "lucide-react";
 import type { ApplicationWithLogs, ApprovalAction } from "@/types/application";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 import { useRef } from "react";
+import HotWorkPermit from "@/components/HotWorkPermit";
 
 export default function ApplicationDetailPage() {
   const params = useParams();
@@ -22,6 +23,8 @@ export default function ApplicationDetailPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
+  const [pdfTemplateHtml, setPdfTemplateHtml] = useState<string | null>(null);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -173,6 +176,7 @@ export default function ApplicationDetailPage() {
 
   const getStatusConfig = (status: string) => {
     const statusMap: Record<string, { label: string; color: string; bgColor: string; borderColor: string; icon: typeof CheckCircle }> = {
+      pending_area_supervisor: { label: "待作業區域主管審核", color: "text-purple-400", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/30", icon: Clock },
       pending_ehs: { label: "待 EHS 審核", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30", icon: Clock },
       pending_manager: { label: "待主管審核", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30", icon: Clock },
       approved: { label: "已通過", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30", icon: CheckCircle },
@@ -181,6 +185,47 @@ export default function ApplicationDetailPage() {
     return statusMap[status] || { label: status, color: "text-slate-400", bgColor: "bg-slate-500/10", borderColor: "border-slate-500/30", icon: Clock };
   };
 
+  // 檢查是否應該顯示熱加工操作許可證（在所有 hooks 之前計算）
+  const shouldShowHotWorkPermit = application && 
+    (application.status === "pending_manager" || application.status === "approved") &&
+    application.hazardousOperations?.hotWork === "yes" &&
+    application.hazardousOperations?.hotWorkDetails;
+  
+  const hotWorkDetails = shouldShowHotWorkPermit ? application?.hazardousOperations?.hotWorkDetails : null;
+
+  // 載入 PDF 範本（必須在所有條件返回之前）
+  useEffect(() => {
+    const loadPdfTemplate = async () => {
+      if (!shouldShowHotWorkPermit || !hotWorkDetails) return;
+      
+      setIsLoadingTemplate(true);
+      try {
+        const response = await fetch('/api/pdf/convert?templatePath=templates/hot-work-permit-template.pdf');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.html) {
+            setPdfTemplateHtml(data.html);
+          }
+        } else {
+          console.log('PDF 範本不存在，使用預設 HTML 實現');
+          setPdfTemplateHtml(null);
+        }
+      } catch (error) {
+        console.error('載入 PDF 範本失敗:', error);
+        setPdfTemplateHtml(null);
+      } finally {
+        setIsLoadingTemplate(false);
+      }
+    };
+
+    loadPdfTemplate();
+  }, [shouldShowHotWorkPermit, hotWorkDetails]);
+  
+  const handlePrintPermit = () => {
+    window.print();
+  };
+
+  // 條件返回（在所有 hooks 之後）
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-200 font-sans">
@@ -216,7 +261,8 @@ export default function ApplicationDetailPage() {
 
   const status = getStatusConfig(application.status);
   const StatusIcon = status.icon;
-  const canApprove = (application.status === "pending_ehs" || application.status === "pending_manager") && !isApproving;
+  const canApprove = (application.status === "pending_area_supervisor" || application.status === "pending_ehs" || application.status === "pending_manager") && !isApproving;
+  const isAreaSupervisorApproval = application.status === "pending_area_supervisor";
   const isEHSManagerApproval = application.status === "pending_ehs";
   const requireCommentOnReject = isEHSManagerApproval && approvalData.action === "reject";
 
@@ -396,7 +442,8 @@ export default function ApplicationDetailPage() {
                         <div key={log.id} className="border-l-4 border-cyan-500 pl-4 py-2">
                           <div className="text-slate-300">
                             <div className="font-medium">
-                              {log.approverType === "ehs_manager" ? "EHS Manager" : "部門主管"}
+                              {log.approverType === "area_supervisor" ? "作業區域主管" : 
+                               log.approverType === "ehs_manager" ? "EHS Manager" : "部門主管"}
                             </div>
                             <div className="text-sm text-slate-500">{log.approverEmail}</div>
                             <div className="mt-1">
@@ -432,6 +479,38 @@ export default function ApplicationDetailPage() {
             審核進度
           </h3>
           <div className="flex items-center gap-4">
+            {/* 作業區域主管審核（僅有動火作業時顯示） */}
+            {application.areaSupervisorEmail && (
+              <>
+                <div className={`flex-1 p-4 rounded-lg border ${
+                  application.status === "pending_area_supervisor" 
+                    ? "bg-purple-500/10 border-purple-500/30" 
+                    : application.approvalLogs.some(log => log.approverType === "area_supervisor" && log.action === "approve") 
+                      ? "bg-emerald-500/10 border-emerald-500/30"
+                      : application.approvalLogs.some(log => log.approverType === "area_supervisor" && log.action === "reject")
+                        ? "bg-red-500/10 border-red-500/30"
+                        : "bg-slate-800/50 border-slate-700"
+                }`}>
+                  <div className="font-medium text-white">作業區域主管審核</div>
+                  <div className={`text-sm mt-1 ${
+                    application.status === "pending_area_supervisor" 
+                      ? "text-purple-400" 
+                      : application.approvalLogs.some(log => log.approverType === "area_supervisor" && log.action === "approve")
+                        ? "text-emerald-400"
+                        : application.approvalLogs.some(log => log.approverType === "area_supervisor" && log.action === "reject")
+                          ? "text-red-400"
+                          : "text-slate-500"
+                  }`}>
+                    {application.approvalLogs.find(log => log.approverType === "area_supervisor") 
+                      ? (application.approvalLogs.find(log => log.approverType === "area_supervisor")?.action === "approve" ? "✓ 已通過" : "✗ 已拒絕")
+                      : "● 待審核"}
+                  </div>
+                </div>
+
+                <div className="text-slate-600 text-2xl">→</div>
+              </>
+            )}
+
             {/* EHS Manager 審核 */}
             <div className={`flex-1 p-4 rounded-lg border ${
               application.status === "pending_ehs" 
@@ -454,7 +533,7 @@ export default function ApplicationDetailPage() {
               }`}>
                 {application.approvalLogs.find(log => log.approverType === "ehs_manager") 
                   ? (application.approvalLogs.find(log => log.approverType === "ehs_manager")?.action === "approve" ? "✓ 已通過" : "✗ 已拒絕")
-                  : "● 待審核"}
+                  : application.status === "pending_area_supervisor" ? "○ 等待中" : "● 待審核"}
               </div>
             </div>
 
@@ -482,7 +561,7 @@ export default function ApplicationDetailPage() {
               }`}>
                 {application.approvalLogs.find(log => log.approverType === "department_manager")
                   ? (application.approvalLogs.find(log => log.approverType === "department_manager")?.action === "approve" ? "✓ 已通過" : "✗ 已拒絕")
-                  : application.status === "pending_ehs" ? "○ 等待中" : "● 待審核"}
+                  : (application.status === "pending_area_supervisor" || application.status === "pending_ehs") ? "○ 等待中" : "● 待審核"}
               </div>
             </div>
 
@@ -617,7 +696,8 @@ export default function ApplicationDetailPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-medium text-white">
-                        {log.approverType === "ehs_manager" ? "EHS Manager" : "部門主管"}
+                        {log.approverType === "area_supervisor" ? "作業區域主管" : 
+                         log.approverType === "ehs_manager" ? "EHS Manager" : "部門主管"}
                       </div>
                       <div className="text-sm text-slate-500 font-mono">{log.approverEmail}</div>
                       <div className="mt-1">
@@ -648,7 +728,7 @@ export default function ApplicationDetailPage() {
           <div className="bg-slate-900/50 border border-cyan-500/30 p-6 rounded-lg backdrop-blur-sm">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Shield className="w-5 h-5 text-cyan-400" />
-              {isEHSManagerApproval ? "EHS Manager 審核" : "部門主管審核"}
+              {isAreaSupervisorApproval ? "作業區域主管審核" : isEHSManagerApproval ? "EHS Manager 審核" : "部門主管審核"}
             </h3>
             <div className="space-y-4">
               <div>
@@ -730,7 +810,45 @@ export default function ApplicationDetailPage() {
             </div>
           </div>
         )}
+
+        {/* 熱加工操作許可證 */}
+        {shouldShowHotWorkPermit && hotWorkDetails && (
+          <div id="hot-work-permit" className="bg-white text-black print:block">
+            {/* 如果 PDF 範本載入成功，顯示轉換後的 HTML */}
+            {isLoadingTemplate && (
+              <div className="p-8 text-center">
+                <p className="text-slate-400">載入 PDF 範本中...</p>
+              </div>
+            )}
+            {!isLoadingTemplate && pdfTemplateHtml && (
+              <>
+                <div className="print:hidden mb-4 flex justify-end">
+                  <button
+                    onClick={handlePrintPermit}
+                    className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
+                  >
+                    <Printer className="w-4 h-4" />
+                    列印許可證
+                  </button>
+                </div>
+                <div 
+                  className="pdf-template-container"
+                  dangerouslySetInnerHTML={{ __html: pdfTemplateHtml }}
+                />
+              </>
+            )}
+            {!isLoadingTemplate && !pdfTemplateHtml && (
+              <HotWorkPermit 
+                hotWorkDetails={hotWorkDetails}
+                workTimeStart={application.workTimeStart}
+                workTimeEnd={application.workTimeEnd}
+              />
+            )}
+          </div>
+        )}
       </main>
+      
+      {/* 列印樣式已移至 HotWorkPermit 組件 */}
     </div>
   );
 }

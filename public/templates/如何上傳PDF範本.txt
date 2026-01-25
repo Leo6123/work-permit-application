@@ -1,0 +1,34 @@
+如何將 PDF 範本放置到此資料夾
+=====================================
+
+方法 1: 使用檔案總管（推薦）
+---------------------------
+1. 打開檔案總管（Windows Explorer）
+2. 導航到此資料夾路徑：
+   D:\Cursor_WorkPermitApplication\public\templates
+3. 將您的 PDF 文件複製或移動到此資料夾
+4. 將 PDF 文件重新命名為：hot-work-permit-template.pdf
+   （必須完全匹配此名稱，包括大小寫）
+
+方法 2: 使用命令列
+-----------------
+1. 打開命令提示字元（CMD）或 PowerShell
+2. 執行以下命令：
+   
+   copy "您的PDF文件路徑" "D:\Cursor_WorkPermitApplication\public\templates\hot-work-permit-template.pdf"
+   
+   例如：
+   copy "C:\Users\Leo\Desktop\我的PDF.pdf" "D:\Cursor_WorkPermitApplication\public\templates\hot-work-permit-template.pdf"
+
+方法 3: 使用拖放
+---------------
+1. 在檔案總管中找到您的 PDF 文件
+2. 將文件拖放到此資料夾
+3. 重新命名為：hot-work-permit-template.pdf
+
+重要提醒
+--------
+- 檔案名稱必須完全匹配：hot-work-permit-template.pdf
+- 檔案必須是 PDF 格式
+- 建議使用可選取文字的 PDF（非圖片格式）
+- 放置後，重新整理瀏覽器頁面即可看到效果

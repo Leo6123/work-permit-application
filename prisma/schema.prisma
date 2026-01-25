@@ -22,9 +22,10 @@ model WorkPermitApplication {
   hazardFactors         String        // 工作環境危害因素 (JSON string)
   hazardousOperations   String        // 危險性作業 (JSON string)
   personnelInfo         String        // 入廠作業人員 (JSON string)
-  status                String        @default("pending_ehs") // pending_ehs, pending_manager, approved, rejected
+  status                String        @default("pending_ehs") // pending_area_supervisor, pending_ehs, pending_manager, approved, rejected
   ehsManagerEmail       String?       // EHS Manager Email
   departmentManagerEmail String?      // 部門主管 Email
+  areaSupervisorEmail   String?       // 作業區域主管 Email
   applicantEmail        String?       // 申請人 Email
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -35,7 +36,7 @@ model ApprovalLog {
   id            String                 @id @default(cuid())
   applicationId String
   application   WorkPermitApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  approverType  String                 // ehs_manager | department_manager
+  approverType  String                 // area_supervisor | ehs_manager | department_manager
   approverEmail String
   action        String                 // approve | reject
   comment       String?                // 附註說明（拒絕時必填，特別是 EHS Manager）

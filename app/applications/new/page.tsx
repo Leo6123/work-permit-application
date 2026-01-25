@@ -31,19 +31,23 @@ export default function NewApplicationPage() {
       applicantName: "",
       department: "",
       hazardFactors: {},
-      hazardousOperations: {},
+      hazardousOperations: {
+        hotWorkDetails: undefined,
+      },
       personnelInfo: {
         contractor: {
           name: "",
           siteSupervisor: "",
           personnel: [""],
         },
+        subcontractors: [],
       },
-      subcontractors: [],
     },
   });
 
   const hotWorkChecked = watch("hazardFactors.hotWork");
+  const hotWorkOperation = watch("hazardousOperations.hotWork");
+  const hotWorkPersonnelType = watch("hazardousOperations.hotWorkDetails.personnelType");
   const applicantNameValue = watch("applicantName");
   const [customApplicantName, setCustomApplicantName] = useState("");
   const [isMounted, setIsMounted] = useState(false);
@@ -55,6 +59,8 @@ export default function NewApplicationPage() {
 
   const showCustomApplicant = isMounted && applicantNameValue === "其他";
   const showHotWorkOperations = isMounted && hotWorkChecked;
+  const showHotWorkDetails = isMounted && hotWorkChecked && hotWorkOperation === "yes";
+  const showContractorName = showHotWorkDetails && hotWorkPersonnelType === "contractor";
 
   const onSubmit = async (data: ApplicationFormInput) => {
     setIsSubmitting(true);
@@ -432,6 +438,224 @@ export default function NewApplicationPage() {
                   )}
                 </div>
               </div>
+            </section>
+          )}
+
+          {/* 動火作業詳細資訊表格 */}
+          {showHotWorkDetails && (
+            <section className="space-y-4 bg-amber-500/5 border border-amber-500/30 rounded-lg p-4">
+              <h3 className="text-xl font-semibold text-white border-b border-slate-800 pb-2">
+                熱加工操作申請
+              </h3>
+              <div className="space-y-4">
+                {/* 熱加工操作人員類型 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    熱加工操作人員 <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex gap-6">
+                    <label className="flex items-center cursor-pointer group">
+                      <input
+                        type="radio"
+                        value="employee"
+                        {...register("hazardousOperations.hotWorkDetails.personnelType")}
+                        className="w-4 h-4 border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+                      />
+                      <span className="ml-2 text-slate-300 group-hover:text-white transition-colors">員工</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer group">
+                      <input
+                        type="radio"
+                        value="contractor"
+                        {...register("hazardousOperations.hotWorkDetails.personnelType")}
+                        className="w-4 h-4 border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
+                      />
+                      <span className="ml-2 text-slate-300 group-hover:text-white transition-colors">承包商</span>
+                    </label>
+                  </div>
+                  {errors.hazardousOperations?.hotWorkDetails?.personnelType && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.personnelType.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 承包商名稱（條件顯示） */}
+                {showContractorName && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      承包商名稱 <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      {...register("hazardousOperations.hotWorkDetails.contractorName")}
+                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
+                      placeholder="請輸入承包商名稱"
+                    />
+                    {errors.hazardousOperations?.hotWorkDetails?.contractorName && (
+                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.hazardousOperations.hotWorkDetails.contractorName.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* 日期和工作編號 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      日期 <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      {...register("hazardousOperations.hotWorkDetails.date")}
+                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+                    />
+                    {errors.hazardousOperations?.hotWorkDetails?.date && (
+                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.hazardousOperations.hotWorkDetails.date.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      工作編號 <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      {...register("hazardousOperations.hotWorkDetails.workOrderNumber")}
+                      className="w-full bg-blue-500/10 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
+                      placeholder="請輸入工作編號"
+                    />
+                    {errors.hazardousOperations?.hotWorkDetails?.workOrderNumber && (
+                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.hazardousOperations.hotWorkDetails.workOrderNumber.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 操作地點 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    操作地點(建築/樓層/物體) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    {...register("hazardousOperations.hotWorkDetails.operationLocation")}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
+                    placeholder="例如：A棟2F機房"
+                  />
+                  {errors.hazardousOperations?.hotWorkDetails?.operationLocation && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.operationLocation.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 待進行的作業 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    待進行的作業 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    {...register("hazardousOperations.hotWorkDetails.workToBePerformed")}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
+                    placeholder="請描述待進行的作業內容"
+                  />
+                  {errors.hazardousOperations?.hotWorkDetails?.workToBePerformed && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.workToBePerformed.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 熱加工操作人員姓名 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    熱加工操作人員的姓名 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    {...register("hazardousOperations.hotWorkDetails.operatorName")}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
+                    placeholder="請輸入操作人員姓名"
+                  />
+                  {errors.hazardousOperations?.hotWorkDetails?.operatorName && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.operatorName.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 火警巡查員姓名 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    火警巡查員姓名 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    {...register("hazardousOperations.hotWorkDetails.fireWatcherName")}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
+                    placeholder="請輸入火警巡查員姓名"
+                  />
+                  {errors.hazardousOperations?.hotWorkDetails?.fireWatcherName && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.fireWatcherName.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 作業區域主管 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    作業區域主管 <span className="text-red-400">*</span>
+                  </label>
+                  {isMounted ? (
+                    <select
+                      {...register("hazardousOperations.hotWorkDetails.areaSupervisor")}
+                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                      defaultValue=""
+                    >
+                      <option value="">請選擇作業區域主管</option>
+                      <option value="生產經理">生產經理</option>
+                      <option value="倉庫經理">倉庫經理</option>
+                      <option value="技術部經理">技術部經理</option>
+                      <option value="研發部經理">研發部經理</option>
+                      <option value="維修部經理">維修部經理</option>
+                    </select>
+                  ) : (
+                    <select
+                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2"
+                      defaultValue=""
+                      disabled
+                    >
+                      <option value="">請選擇作業區域主管</option>
+                    </select>
+                  )}
+                  {errors.hazardousOperations?.hotWorkDetails?.areaSupervisor && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.areaSupervisor.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {errors.hazardousOperations?.hotWorkDetails && typeof errors.hazardousOperations.hotWorkDetails === "object" && "_errors" in errors.hazardousOperations.hotWorkDetails && (
+                <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {(errors.hazardousOperations.hotWorkDetails as { _errors?: string[] })._errors?.[0] || "請填寫所有必填欄位"}
+                </p>
+              )}
             </section>
           )}
 

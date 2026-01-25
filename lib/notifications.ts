@@ -25,6 +25,41 @@ export function sendNotification(data: NotificationData): void {
 }
 
 /**
+ * 通知作業區域主管有新申請需要審核
+ */
+export function notifyAreaSupervisor(
+  areaSupervisorEmail: string,
+  applicationId: string,
+  applicantName: string,
+  department: string,
+  workArea: string,
+  areaSupervisor: string,
+  workOrderNumber?: string
+): void {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const link = `${baseUrl}/applications/${applicationId}`;
+  const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
+
+  sendNotification({
+    to: areaSupervisorEmail,
+    subject: "【施工安全作業許可】動火作業申請待審核",
+    body: `您好 ${areaSupervisor}，
+
+有一份包含動火作業的施工安全作業許可申請需要您優先審核：${workOrderInfo}
+
+申請人：${applicantName}
+部門：${department}
+施工區域：${workArea}
+
+請點擊以下連結進行審核：
+${link}
+
+此為系統自動發送，請勿直接回覆此郵件。`,
+    link,
+  });
+}
+
+/**
  * 通知 EHS Manager 有新申請需要審核
  */
 export function notifyEHSManager(
