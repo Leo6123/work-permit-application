@@ -8,6 +8,8 @@ import type { ApplicationWithLogs, ApprovalAction } from "@/types/application";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 import { useRef } from "react";
 import HotWorkPermit from "@/components/HotWorkPermit";
+import ConfinedSpacePermit from "@/components/ConfinedSpacePermit";
+import WorkAtHeightPermit from "@/components/WorkAtHeightPermit";
 
 export default function ApplicationDetailPage() {
   const params = useParams();
@@ -192,6 +194,16 @@ export default function ApplicationDetailPage() {
     application.hazardousOperations?.hotWorkDetails;
   
   const hotWorkDetails = shouldShowHotWorkPermit ? application?.hazardousOperations?.hotWorkDetails : null;
+
+  // 檢查是否應該顯示局限空間許可證（在所有 hooks 之前計算）
+  const shouldShowConfinedSpacePermit = application && 
+    application.status === "approved" &&
+    application.hazardFactors?.confinedSpace === true;
+
+  // 檢查是否應該顯示高處作業許可證（在所有 hooks 之前計算）
+  const shouldShowWorkAtHeightPermit = application && 
+    application.status === "approved" &&
+    application.hazardFactors?.workAtHeight === true;
 
   // 載入 PDF 範本（必須在所有條件返回之前）
   useEffect(() => {
@@ -844,6 +856,20 @@ export default function ApplicationDetailPage() {
                 workTimeEnd={application.workTimeEnd}
               />
             )}
+          </div>
+        )}
+
+        {/* 局限空間許可證 */}
+        {shouldShowConfinedSpacePermit && application && (
+          <div id="confined-space-permit" className="bg-white text-black print:block">
+            <ConfinedSpacePermit application={application} />
+          </div>
+        )}
+
+        {/* 高處作業許可證 */}
+        {shouldShowWorkAtHeightPermit && application && (
+          <div id="work-at-height-permit" className="bg-white text-black print:block">
+            <WorkAtHeightPermit application={application} />
           </div>
         )}
       </main>

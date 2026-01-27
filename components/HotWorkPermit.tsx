@@ -171,25 +171,74 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
           <div className="p-3">
             <h2 className="font-bold text-sm border-b border-black pb-1 mb-2">第1部分 - 所需預防措施</h2>
             
-            <div className="text-xs space-y-2">
-              <div>☐ 不適用</div>
-              <div>☑ 消防泵正在運作並可自動啟動。</div>
-              <div>☑ 灑水系統的供水控制閥為開啟狀態。</div>
-              <div>☑ 滅火器處於工作狀態/可操作。</div>
-              <div>☑ 熱加工操作設備處於良好工作狀態。</div>
+            {/* 標題行 */}
+            <div className="text-xs flex items-center mb-1">
+              <span className="w-4 text-center">是</span>
+              <span className="w-12 text-center">不適用</span>
+            </div>
+            
+            <div className="text-xs space-y-1">
+              <div className="flex items-center">
+                <span className="w-4 text-center">☐</span>
+                <span className="w-4 text-center">☑</span>
+                <span className="ml-1">消防泵正在運作並可自動啟動。</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☐</span>
+                <span className="w-4 text-center">☑</span>
+                <span className="ml-1">灑水系統的供水控制閥為開啟狀態。</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☑</span>
+                <span className="w-4 text-center">☐</span>
+                <span className="ml-1">滅火器處於工作狀態/可操作。</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☑</span>
+                <span className="w-4 text-center">☐</span>
+                <span className="ml-1">熱加工操作設備處於良好工作狀態。</span>
+              </div>
             </div>
 
             {/* 在熱加工操作區35英尺以內的安全要求 */}
             <div className="mt-3 bg-yellow-100 p-2">
               <h3 className="font-bold text-xs mb-1">在熱加工操作區35英尺（10公尺）以內的安全要求</h3>
               <div className="text-[10px] space-y-1">
-                <div>☑ 採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</div>
-                <div>☑ 移走可燃物或採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</div>
-                <div>☑ 隔離易燃氣體、可燃液體或可燃粉塵/棉絨等潛在火源（如關閉設備）。</div>
-                <div>☑ 移走可燃液體、可燃粉塵/棉絨和可燃殘留物。</div>
-                <div>☑ 關閉通風和輸送系統。</div>
-                <div>☑ 移走可燃物，對於存在開口或有導熱材料貫穿的地板、牆壁、天花板或屋頂的另一面，考慮進行二次防火巡視。</div>
-                <div>☐ 熱加工操作是否在可燃屋頂上進行（例如，熱熔法鋪設屋頂）？如果是，採取以下所需的額外預防措施。</div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">移走可燃物或採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">隔離易燃氣體、可燃液體或可燃粉塵/棉絨等潛在火源（如關閉設備）。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">移走可燃液體、可燃粉塵/棉絨和可燃殘留物。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">關閉通風和輸送系統。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">移走可燃物，對於存在開口或有導熱材料貫穿的地板、牆壁、天花板或屋頂的另一面，考慮進行二次防火巡視。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">熱加工操作是否在可燃屋頂上進行（例如，熱熔法鋪設屋頂）？如果是，採取以下所需的額外預防措施。</span>
+                </div>
               </div>
             </div>
 
@@ -197,11 +246,31 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             <div className="mt-2">
               <h3 className="font-bold text-xs mb-1">密閉設備、管道或管路上/內的熱加工操作</h3>
               <div className="text-[10px] space-y-1">
-                <div>☑ 將設備與操作隔離。</div>
-                <div>☑ 移走可燃液體和淨化易燃氣體/蒸汽。</div>
-                <div>☐ 操作之前及/或操作過程中，監控易燃氣體/蒸汽。LEL讀數：_____</div>
-                <div>☑ 移走可燃粉塵/棉絨或其他可燃材料。</div>
-                <div>☐ 是否在配有無法移走的可燃襯套或部件的設備上/內進行操作？如果是，採取以下所需的額外預防措施。</div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">將設備與操作隔離。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">移走可燃液體和淨化易燃氣體/蒸汽。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">操作之前及/或操作過程中，監控易燃氣體/蒸汽。LEL讀數：_____</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">移走可燃粉塵/棉絨或其他可燃材料。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">是否在配有無法移走的可燃襯套或部件的設備上/內進行操作？如果是，採取以下所需的額外預防措施。</span>
+                </div>
               </div>
             </div>
 
@@ -210,10 +279,26 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
               <h3 className="font-bold text-xs mb-1">對熱加工區進行防火巡視/防火監控</h3>
               <p className="text-[9px] text-gray-600 mb-1">列出的時間適用於大多數情況。可燃隱蔽空隙、屋頂工程或有利因素使用許可證背面的表格作為指南。</p>
               <div className="text-[10px] space-y-1">
-                <div>☑ 熱加工操作期間進行不間斷防火巡視。</div>
-                <div>☑ 熱加工操作結束後，對熱加工操作區類別進行</div>
-                <div className="ml-4">☑ 1小時或另外___小時的不間斷防火巡查。</div>
-                <div className="ml-4">☐ 3小時或另外___小時的防火監控。</div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">熱加工操作期間進行不間斷防火巡視。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">熱加工操作結束後，對熱加工操作區類別進行</span>
+                </div>
+                <div className="flex items-start ml-4">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">1小時或另外___小時的不間斷防火巡查。</span>
+                </div>
+                <div className="flex items-start ml-4">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">3小時或另外___小時的防火監控。</span>
+                </div>
               </div>
             </div>
 
@@ -329,25 +414,74 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
           <div className="p-3">
             <h2 className="font-bold text-sm border-b border-black pb-1 mb-2">第2部分 - 所需預防措施</h2>
             
+            {/* 標題行 */}
+            <div className="text-xs flex items-center mb-1">
+              <span className="w-4 text-center">是</span>
+              <span className="w-12 text-center">不適用</span>
+            </div>
+            
             <div className="text-xs space-y-1">
-              <div>☐ 不適用</div>
-              <div>☑ 消防泵正在運作並可自動啟動。</div>
-              <div>☑ 灑水系統的供水控制閥為開啟狀態。</div>
-              <div>☑ 滅火器處於工作狀態/可操作。</div>
-              <div>☑ 熱加工操作設備處於良好工作狀態。</div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☐</span>
+                <span className="w-4 text-center">☑</span>
+                <span className="ml-1">消防泵正在運作並可自動啟動。</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☐</span>
+                <span className="w-4 text-center">☑</span>
+                <span className="ml-1">灑水系統的供水控制閥為開啟狀態。</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☑</span>
+                <span className="w-4 text-center">☐</span>
+                <span className="ml-1">滅火器處於工作狀態/可操作。</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 text-center">☑</span>
+                <span className="w-4 text-center">☐</span>
+                <span className="ml-1">熱加工操作設備處於良好工作狀態。</span>
+              </div>
             </div>
 
             {/* 在熱加工操作區35英尺以內的安全要求 */}
             <div className="mt-2 bg-yellow-100 p-2">
               <h3 className="font-bold text-xs mb-1">在熱加工操作區35英尺（10公尺）以內的安全要求</h3>
               <div className="text-[10px] space-y-1">
-                <div>☑ 採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</div>
-                <div>☑ 移走可燃物或採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</div>
-                <div>☑ 隔離易燃氣體、可燃液體或可燃粉塵/棉絨等潛在火源（如關閉設備）。</div>
-                <div>☑ 移走可燃液體、可燃粉塵/棉絨和可燃殘留物。</div>
-                <div>☑ 關閉通風和輸送系統。</div>
-                <div>☑ 移走可燃物，對於存在開口或有導熱材料貫穿的地板、牆壁、天花板或屋頂的另一面，考慮進行二次防火巡視。</div>
-                <div>☐ 熱加工操作是否在可燃屋頂上進行？如果是，採取以下所需的額外預防措施。</div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">移走可燃物或採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">隔離易燃氣體、可燃液體或可燃粉塵/棉絨等潛在火源（如關閉設備）。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">移走可燃液體、可燃粉塵/棉絨和可燃殘留物。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">關閉通風和輸送系統。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">移走可燃物，對於存在開口或有導熱材料貫穿的地板、牆壁、天花板或屋頂的另一面，考慮進行二次防火巡視。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">熱加工操作是否在可燃屋頂上進行？如果是，採取以下所需的額外預防措施。</span>
+                </div>
               </div>
             </div>
 
@@ -355,11 +489,31 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             <div className="mt-2">
               <h3 className="font-bold text-xs mb-1">密閉設備、管道或管路上/內的熱加工操作</h3>
               <div className="text-[10px] space-y-1">
-                <div>☑ 將設備與操作隔離。</div>
-                <div>☑ 移走可燃液體和淨化易燃氣體/蒸汽。</div>
-                <div>☐ 操作之前及/或操作過程中，監控易燃氣體/蒸汽。LEL讀數：_____</div>
-                <div>☑ 移走可燃粉塵/棉絨或其他可燃材料。</div>
-                <div>☐ 是否在配有無法移走的可燃襯套或部件的設備上/內進行操作？</div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">將設備與操作隔離。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">移走可燃液體和淨化易燃氣體/蒸汽。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">操作之前及/或操作過程中，監控易燃氣體/蒸汽。LEL讀數：_____</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">移走可燃粉塵/棉絨或其他可燃材料。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">是否在配有無法移走的可燃襯套或部件的設備上/內進行操作？</span>
+                </div>
               </div>
             </div>
 
@@ -367,10 +521,26 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             <div className="mt-2">
               <h3 className="font-bold text-xs mb-1">對熱加工區進行防火巡視/防火監控</h3>
               <div className="text-[10px] space-y-1">
-                <div>☑ 熱加工操作期間進行不間斷防火巡視。</div>
-                <div>☑ 熱加工操作結束後，對熱加工操作區類別進行</div>
-                <div className="ml-4">☑ 1小時或另外___小時的不間斷防火巡查。</div>
-                <div className="ml-4">☐ 3小時或另外___小時的防火監控。</div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">熱加工操作期間進行不間斷防火巡視。</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">熱加工操作結束後，對熱加工操作區類別進行</span>
+                </div>
+                <div className="flex items-start ml-4">
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="ml-1">1小時或另外___小時的不間斷防火巡查。</span>
+                </div>
+                <div className="flex items-start ml-4">
+                  <span className="w-4 text-center flex-shrink-0">☑</span>
+                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                  <span className="ml-1">3小時或另外___小時的防火監控。</span>
+                </div>
               </div>
             </div>
 
