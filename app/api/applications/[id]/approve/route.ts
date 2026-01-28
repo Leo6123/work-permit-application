@@ -167,7 +167,7 @@ export async function POST(
       if (isAreaSupervisor) {
         // 作業區域主管拒絕：通知申請人
         if (application.applicantEmail) {
-          notifyApplicant(
+          await notifyApplicant(
             application.applicantEmail,
             params.id,
             "rejected",
@@ -178,7 +178,7 @@ export async function POST(
       } else if (isEHSManager) {
         // EHS Manager 拒絕：通知申請人
         if (application.applicantEmail) {
-          notifyApplicant(
+          await notifyApplicant(
             application.applicantEmail,
             params.id,
             "rejected",
@@ -190,7 +190,7 @@ export async function POST(
         // 部門主管拒絕：通知 EHS Manager + 申請人
         const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
         if (ehsManagerEmail) {
-          notifyEHSManagerRejection(
+          await notifyEHSManagerRejection(
             ehsManagerEmail,
             params.id,
             application.applicantName,
@@ -201,7 +201,7 @@ export async function POST(
           );
         }
         if (application.applicantEmail) {
-          notifyApplicant(
+          await notifyApplicant(
             application.applicantEmail,
             params.id,
             "rejected",
@@ -214,7 +214,7 @@ export async function POST(
       // 作業區域主管通過：通知 EHS Manager
       const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
       if (ehsManagerEmail) {
-        notifyEHSManager(
+        await notifyEHSManager(
           ehsManagerEmail,
           params.id,
           application.applicantName,
@@ -228,7 +228,7 @@ export async function POST(
       const deptManagerEmail = application.departmentManagerEmail || 
                                getDepartmentManagerEmail(application.department);
       if (deptManagerEmail) {
-        notifyDepartmentManager(
+        await notifyDepartmentManager(
           deptManagerEmail,
           params.id,
           application.applicantName,
@@ -241,7 +241,7 @@ export async function POST(
       // 部門主管通過：完成審查，通知 EHS Manager + 申請人
       const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
       if (ehsManagerEmail) {
-        notifyEHSManagerApproval(
+        await notifyEHSManagerApproval(
           ehsManagerEmail,
           params.id,
           application.applicantName,
@@ -251,7 +251,7 @@ export async function POST(
         );
       }
       if (application.applicantEmail) {
-        notifyApplicant(
+        await notifyApplicant(
           application.applicantEmail,
           params.id,
           "approved",

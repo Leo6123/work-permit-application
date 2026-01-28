@@ -1,4 +1,12 @@
-// Email 通知模擬服務
+// Email 通知服務 - 使用 Resend 發送真實郵件
+import { Resend } from 'resend';
+
+// 初始化 Resend（如果有 API Key）
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+// 發送者 Email（需要在 Resend 驗證的網域，或使用 onboarding@resend.dev 測試）
+const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const FROM_NAME = process.env.FROM_NAME || '施工安全作業許可系統';
 
 interface NotificationData {
   to: string;
@@ -8,11 +16,66 @@ interface NotificationData {
 }
 
 /**
- * 模擬發送 Email 通知（使用 console.log 輸出）
+ * 發送 Email 通知
+ * - 如果有設定 RESEND_API_KEY，會發送真實郵件
+ * - 否則使用 console.log 輸出（開發模式）
  */
-export function sendNotification(data: NotificationData): void {
+export async function sendNotification(data: NotificationData): Promise<void> {
+  // 建立 HTML 郵件內容
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; border-radius: 8px 8px 0 0;">
+        <h2 style="color: white; margin: 0;">施工安全作業許可系統</h2>
+      </div>
+      <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
+        <p style="white-space: pre-line; color: #374151; line-height: 1.6;">${data.body}</p>
+        ${data.link ? `
+          <div style="margin-top: 20px;">
+            <a href="${data.link}" 
+               style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 6px; font-weight: bold;">
+              前往審核
+            </a>
+          </div>
+        ` : ''}
+      </div>
+      <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+        <p style="color: #6b7280; font-size: 12px; margin: 0;">
+          此為系統自動發送，請勿直接回覆此郵件。
+        </p>
+      </div>
+    </div>
+  `;
+
+  // 如果有 Resend API Key，發送真實郵件
+  if (resend) {
+    try {
+      const result = await resend.emails.send({
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        to: data.to,
+        subject: data.subject,
+        html: htmlContent,
+        text: data.body, // 純文字版本
+      });
+
+      console.log(`✅ Email sent to ${data.to}:`, result);
+    } catch (error) {
+      console.error(`❌ Failed to send email to ${data.to}:`, error);
+      // 失敗時回退到 console.log
+      logNotification(data);
+    }
+  } else {
+    // 沒有 API Key，使用 console.log 模擬
+    logNotification(data);
+  }
+}
+
+/**
+ * 使用 console.log 輸出通知（開發模式）
+ */
+function logNotification(data: NotificationData): void {
   console.log("\n" + "=".repeat(60));
-  console.log("📧 EMAIL NOTIFICATION");
+  console.log("📧 EMAIL NOTIFICATION (模擬)");
   console.log("=".repeat(60));
   console.log(`To: ${data.to}`);
   console.log(`Subject: ${data.subject}`);
@@ -27,7 +90,7 @@ export function sendNotification(data: NotificationData): void {
 /**
  * 通知作業區域主管有新申請需要審核
  */
-export function notifyAreaSupervisor(
+export async function notifyAreaSupervisor(
   areaSupervisorEmail: string,
   applicationId: string,
   applicantName: string,
@@ -35,12 +98,12 @@ export function notifyAreaSupervisor(
   workArea: string,
   areaSupervisor: string,
   workOrderNumber?: string
-): void {
+): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
-  sendNotification({
+  await sendNotification({
     to: areaSupervisorEmail,
     subject: "【施工安全作業許可】動火作業申請待審核",
     body: `您好 ${areaSupervisor}，
@@ -51,10 +114,7 @@ export function notifyAreaSupervisor(
 部門：${department}
 施工區域：${workArea}
 
-請點擊以下連結進行審核：
-${link}
-
-此為系統自動發送，請勿直接回覆此郵件。`,
+請點擊下方按鈕進行審核。`,
     link,
   });
 }
@@ -62,19 +122,19 @@ ${link}
 /**
  * 通知 EHS Manager 有新申請需要審核
  */
-export function notifyEHSManager(
+export async function notifyEHSManager(
   ehsManagerEmail: string,
   applicationId: string,
   applicantName: string,
   department: string,
   workArea: string,
   workOrderNumber?: string
-): void {
+): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
-  sendNotification({
+  await sendNotification({
     to: ehsManagerEmail,
     subject: "【施工安全作業許可】新申請待審核",
     body: `您好，
@@ -85,10 +145,7 @@ export function notifyEHSManager(
 部門：${department}
 施工區域：${workArea}
 
-請點擊以下連結進行審核：
-${link}
-
-此為系統自動發送，請勿直接回覆此郵件。`,
+請點擊下方按鈕進行審核。`,
     link,
   });
 }
@@ -96,19 +153,19 @@ ${link}
 /**
  * 通知部門主管需要審核
  */
-export function notifyDepartmentManager(
+export async function notifyDepartmentManager(
   managerEmail: string,
   applicationId: string,
   applicantName: string,
   department: string,
   workArea: string,
   workOrderNumber?: string
-): void {
+): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
-  sendNotification({
+  await sendNotification({
     to: managerEmail,
     subject: "【施工安全作業許可】申請待最終審核",
     body: `您好，
@@ -119,10 +176,7 @@ export function notifyDepartmentManager(
 部門：${department}
 施工區域：${workArea}
 
-請點擊以下連結進行審核：
-${link}
-
-此為系統自動發送，請勿直接回覆此郵件。`,
+請點擊下方按鈕進行審核。`,
     link,
   });
 }
@@ -130,13 +184,13 @@ ${link}
 /**
  * 通知申請人審核結果
  */
-export function notifyApplicant(
+export async function notifyApplicant(
   applicantEmail: string,
   applicationId: string,
   status: "approved" | "rejected",
   comment?: string,
   workOrderNumber?: string
-): void {
+): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const link = `${baseUrl}/applications/${applicationId}`;
 
@@ -144,17 +198,14 @@ export function notifyApplicant(
   const commentText = comment ? `\n\n審核意見：\n${comment}` : "";
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
-  sendNotification({
+  await sendNotification({
     to: applicantEmail,
     subject: `【施工安全作業許可】申請${statusText}`,
     body: `您好，
 
 您的施工安全作業許可申請審核結果：${statusText}${workOrderInfo}${commentText}
 
-請點擊以下連結查看詳細資訊：
-${link}
-
-此為系統自動發送，請勿直接回覆此郵件。`,
+請點擊下方按鈕查看詳細資訊。`,
     link,
   });
 }
@@ -162,7 +213,7 @@ ${link}
 /**
  * 通知 EHS Manager：部門主管拒絕申請
  */
-export function notifyEHSManagerRejection(
+export async function notifyEHSManagerRejection(
   ehsManagerEmail: string,
   applicationId: string,
   applicantName: string,
@@ -170,13 +221,13 @@ export function notifyEHSManagerRejection(
   workArea: string,
   rejectionComment?: string,
   workOrderNumber?: string
-): void {
+): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
   const commentInfo = rejectionComment ? `\n\n拒絕原因：${rejectionComment}` : "";
 
-  sendNotification({
+  await sendNotification({
     to: ehsManagerEmail,
     subject: "【施工安全作業許可】申請被部門主管拒絕",
     body: `您好，
@@ -187,10 +238,7 @@ export function notifyEHSManagerRejection(
 部門：${department}
 施工區域：${workArea}${commentInfo}
 
-請點擊以下連結查看詳情：
-${link}
-
-此為系統自動發送，請勿直接回覆此郵件。`,
+請點擊下方按鈕查看詳情。`,
     link,
   });
 }
@@ -198,19 +246,19 @@ ${link}
 /**
  * 通知 EHS Manager：申請已完成審查（部門主管通過）
  */
-export function notifyEHSManagerApproval(
+export async function notifyEHSManagerApproval(
   ehsManagerEmail: string,
   applicationId: string,
   applicantName: string,
   department: string,
   workArea: string,
   workOrderNumber?: string
-): void {
+): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
-  sendNotification({
+  await sendNotification({
     to: ehsManagerEmail,
     subject: "【施工安全作業許可】申請已完成審查",
     body: `您好，
@@ -221,10 +269,7 @@ export function notifyEHSManagerApproval(
 部門：${department}
 施工區域：${workArea}
 
-請點擊以下連結查看詳情：
-${link}
-
-此為系統自動發送，請勿直接回覆此郵件。`,
+請點擊下方按鈕查看詳情。`,
     link,
   });
 }

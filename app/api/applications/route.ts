@@ -147,10 +147,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 根據是否有動火作業決定通知對象
+    // 根據是否有動火作業決定通知對象（使用 await 發送郵件）
     if (hasHotWork && areaSupervisorEmail && data.hazardousOperations.hotWorkDetails) {
       // 通知作業區域主管
-      notifyAreaSupervisor(
+      await notifyAreaSupervisor(
         areaSupervisorEmail,
         application.id,
         data.applicantName,
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
       );
     } else {
       // 通知 EHS Manager（原有流程）
-      notifyEHSManager(
+      await notifyEHSManager(
         ehsManagerEmail,
         application.id,
         data.applicantName,
