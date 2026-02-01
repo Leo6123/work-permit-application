@@ -14,6 +14,8 @@ export const applicationFormSchema = z.object({
     confinedSpace: z.boolean().optional(),
     workAtHeight: z.boolean().optional(),
   }),
+  hazardFactorsDescription: z.string().optional(), // 一般作業危害因素說明
+  otherHazardFactorsDescription: z.string().optional(), // 其他作業危害因素說明
   hazardousOperations: z.object({
     hotWork: z.enum(["yes", "no"]).optional(),
     confinedSpace: z.enum(["yes", "no"]).optional(),
@@ -24,7 +26,6 @@ export const applicationFormSchema = z.object({
       }),
       contractorName: z.string().optional(),
       date: z.string().min(1, "日期為必填欄位"),
-      workOrderNumber: z.string().min(1, "工作編號為必填欄位"),
       operationLocation: z.string().min(1, "操作地點為必填欄位"),
       workToBePerformed: z.string().min(1, "待進行的作業為必填欄位"),
       operatorName: z.string().min(1, "熱加工操作人員姓名為必填欄位"),
@@ -86,6 +87,29 @@ export const applicationFormSchema = z.object({
   {
     message: "當選擇承包商時，承包商名稱為必填欄位",
     path: ["hazardousOperations", "hotWorkDetails", "contractorName"],
+  }
+).refine(
+  (data) => {
+    // 檢查開始和結束日期是否為同一天
+    if (data.workTimeStart && data.workTimeEnd) {
+      const startDate = new Date(data.workTimeStart);
+      const endDate = new Date(data.workTimeEnd);
+      
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth();
+      const startDay = startDate.getDate();
+      
+      const endYear = endDate.getFullYear();
+      const endMonth = endDate.getMonth();
+      const endDay = endDate.getDate();
+      
+      return startYear === endYear && startMonth === endMonth && startDay === endDay;
+    }
+    return true;
+  },
+  {
+    message: "結束日期必須與開始日期為同一天",
+    path: ["workTimeEnd"],
   }
 );
 

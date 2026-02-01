@@ -29,7 +29,6 @@ export interface HotWorkDetails {
   personnelType: "employee" | "contractor";  // 進行熱加工操作人員類型
   contractorName?: string;                    // 承包商名稱（當選擇承包商時必填）
   date: string;                               // 日期
-  workOrderNumber: string;                    // 工作編號
   operationLocation: string;                  // 操作地點(建築/樓層/物體)
   workToBePerformed: string;                  // 待進行的作業
   operatorName: string;                       // 熱加工操作人員的姓名
@@ -74,6 +73,8 @@ export interface ApplicationFormData {
   workArea: string;                // 施工區域
   workContent: string;             // 施工內容
   hazardFactors: HazardFactors;
+  hazardFactorsDescription?: string; // 一般作業危害因素說明
+  otherHazardFactorsDescription?: string; // 其他作業危害因素說明
   hazardousOperations: HazardousOperations;
   personnelInfo: PersonnelInfo;
   applicantEmail?: string;         // 申請人 Email

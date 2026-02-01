@@ -133,7 +133,11 @@ export async function POST(request: NextRequest) {
         workArea: data.workArea,
         workContent: data.workContent,
         contractorInfo: JSON.stringify(contractorInfo),
-        hazardFactors: JSON.stringify(data.hazardFactors),
+        hazardFactors: JSON.stringify({
+          ...data.hazardFactors,
+          description: data.hazardFactorsDescription || "",
+          otherDescription: data.otherHazardFactorsDescription || "",
+        }),
         hazardousOperations: JSON.stringify({
           ...data.hazardousOperations,
           // hotWorkDetails 已包含在 hazardousOperations 中，會一起被 JSON.stringify

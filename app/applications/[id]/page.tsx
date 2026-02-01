@@ -298,7 +298,7 @@ export default function ApplicationDetailPage() {
                 Construction Work Permit System
               </p>
               <p className="text-xs text-slate-500">
-                線上施工安全作業許可申請系統
+                施工安全作業許可線上申請系統
               </p>
             </div>
           </Link>
@@ -422,6 +422,22 @@ export default function ApplicationDetailPage() {
                     {application.hazardFactors.confinedSpace && <div>✓ 局限空間</div>}
                     {application.hazardFactors.workAtHeight && <div>✓ 高處作業及電梯維修保養</div>}
                   </div>
+                  {(application.hazardFactors as any)?.description && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-slate-400 mb-2">一般作業危害因素說明：</p>
+                      <p className="text-slate-300 whitespace-pre-line bg-slate-900/50 border border-slate-800 rounded p-3">
+                        {(application.hazardFactors as any).description}
+                      </p>
+                    </div>
+                  )}
+                  {(application.hazardFactors as any)?.otherDescription && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-slate-400 mb-2">其他作業危害因素說明：</p>
+                      <p className="text-slate-300 whitespace-pre-line bg-slate-900/50 border border-slate-800 rounded p-3">
+                        {(application.hazardFactors as any).otherDescription}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div>

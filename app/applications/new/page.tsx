@@ -20,17 +20,39 @@ export default function NewApplicationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 取得今天的日期時間字串（格式：YYYY-MM-DDTHH:mm）
+  const getTodayDateTimeString = (hours: number = 8, minutes: number = 0): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const hoursStr = String(hours).padStart(2, '0');
+    const minutesStr = String(minutes).padStart(2, '0');
+    return `${year}-${month}-${day}T${hoursStr}:${minutesStr}`;
+  };
+
+  const defaultStartTime = getTodayDateTimeString(8, 0); // 預設今天 08:00
+  const defaultEndTime = getTodayDateTimeString(17, 0);   // 預設今天 17:00
+
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<ApplicationFormInput>({
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
       applicantName: "",
       department: "",
-      hazardFactors: {},
+      workTimeStart: defaultStartTime,
+      workTimeEnd: defaultEndTime,
+      hazardFactors: {
+        generalWork: true, // 一般作業固定打勾
+      },
+      hazardFactorsDescription: "一般安全須知及施工安全須知、跌倒、有害物、墜/滾落、物料掉落、感電、火災、溺水、被夾被捲、熱危害、道路及堆高機等", // 一般作業危害因素說明
+      otherHazardFactorsDescription: "", // 其他作業危害因素說明
       hazardousOperations: {
         hotWorkDetails: undefined,
       },
@@ -51,6 +73,30 @@ export default function NewApplicationPage() {
   const applicantNameValue = watch("applicantName");
   const [customApplicantName, setCustomApplicantName] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+
+  // 更新其他作業危害因素說明的函數
+  const updateOtherHazardFactors = () => {
+    const factorSet = new Set<string>();
+    
+    if (getValues("hazardFactors.hotWork")) {
+      factorSet.add("火災");
+    }
+    
+    if (getValues("hazardFactors.confinedSpace")) {
+      const confinedSpaceFactors = ["有害物", "墜/滾落", "物料掉落", "感電", "火災", "溺水"];
+      confinedSpaceFactors.forEach(factor => factorSet.add(factor));
+    }
+    
+    if (getValues("hazardFactors.workAtHeight")) {
+      const workAtHeightFactors = ["墜/滾落", "物料掉落", "感電", "吊掛", "被夾被捲"];
+      workAtHeightFactors.forEach(factor => factorSet.add(factor));
+    }
+    
+    // 將 Set 轉換為陣列並用頓號連接
+    const uniqueFactors = Array.from(factorSet).join("、");
+    
+    setValue("otherHazardFactorsDescription", uniqueFactors, { shouldValidate: false });
+  };
 
   // 防止 hydration 錯誤
   useEffect(() => {
@@ -149,7 +195,7 @@ export default function NewApplicationPage() {
                 Construction Work Permit System
               </p>
               <p className="text-xs text-slate-500">
-                線上施工安全作業許可申請系統
+                施工安全作業許可線上申請系統
               </p>
             </div>
           </Link>
@@ -290,7 +336,40 @@ export default function NewApplicationPage() {
                   </label>
                   <input
                     type="datetime-local"
-                    {...register("workTimeStart")}
+                    {...register("workTimeStart", {
+                      onChange: (e) => {
+                        const startValue = e.target.value;
+                        if (startValue) {
+                          const startDate = new Date(startValue);
+                          const endValue = getValues("workTimeEnd");
+                          
+                          if (endValue) {
+                            const endDate = new Date(endValue);
+                            // 取得開始日期的年月日
+                            const startYear = startDate.getFullYear();
+                            const startMonth = startDate.getMonth();
+                            const startDay = startDate.getDate();
+                            
+                            // 取得結束日期的時間部分
+                            const endHours = endDate.getHours();
+                            const endMinutes = endDate.getMinutes();
+                            
+                            // 將結束日期設為與開始日期同一天，保留原來的時間
+                            const newEndDate = new Date(startYear, startMonth, startDay, endHours, endMinutes);
+                            
+                            // 格式化為 datetime-local 格式
+                            const year = newEndDate.getFullYear();
+                            const month = String(newEndDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(newEndDate.getDate()).padStart(2, '0');
+                            const hours = String(newEndDate.getHours()).padStart(2, '0');
+                            const minutes = String(newEndDate.getMinutes()).padStart(2, '0');
+                            const newEndDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+                            
+                            setValue("workTimeEnd", newEndDateTimeString, { shouldValidate: true });
+                          }
+                        }
+                      }
+                    })}
                     className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
                   />
                   {errors.workTimeStart && (
@@ -306,13 +385,55 @@ export default function NewApplicationPage() {
                   </label>
                   <input
                     type="datetime-local"
-                    {...register("workTimeEnd")}
+                    {...register("workTimeEnd", {
+                      onChange: (e) => {
+                        const endValue = e.target.value;
+                        const startValue = getValues("workTimeStart");
+                        
+                        if (endValue && startValue) {
+                          const startDate = new Date(startValue);
+                          const endDate = new Date(endValue);
+                          
+                          // 檢查是否為同一天
+                          const startYear = startDate.getFullYear();
+                          const startMonth = startDate.getMonth();
+                          const startDay = startDate.getDate();
+                          
+                          const endYear = endDate.getFullYear();
+                          const endMonth = endDate.getMonth();
+                          const endDay = endDate.getDate();
+                          
+                          // 如果不是同一天，自動調整為與開始日期同一天
+                          if (startYear !== endYear || startMonth !== endMonth || startDay !== endDay) {
+                            const endHours = endDate.getHours();
+                            const endMinutes = endDate.getMinutes();
+                            
+                            const newEndDate = new Date(startYear, startMonth, startDay, endHours, endMinutes);
+                            
+                            const year = newEndDate.getFullYear();
+                            const month = String(newEndDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(newEndDate.getDate()).padStart(2, '0');
+                            const hours = String(newEndDate.getHours()).padStart(2, '0');
+                            const minutes = String(newEndDate.getMinutes()).padStart(2, '0');
+                            const newEndDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+                            
+                            setValue("workTimeEnd", newEndDateTimeString, { shouldValidate: true });
+                          }
+                        }
+                      }
+                    })}
                     className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
                   />
                   {errors.workTimeEnd && (
                     <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
                       <AlertCircle className="w-4 h-4" />
                       {errors.workTimeEnd.message}
+                    </p>
+                  )}
+                  {errors.workTimeEnd?.type === "sameDay" && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      結束日期必須與開始日期為同一天
                     </p>
                   )}
                 </div>
@@ -362,28 +483,37 @@ export default function NewApplicationPage() {
               工作環境危害因素
             </h3>
             <div className="space-y-3 bg-slate-900/50 border border-slate-800 rounded p-4">
-              <label className="flex items-center cursor-pointer group">
+              <label className="flex items-center group">
                 <input
                   type="checkbox"
                   {...register("hazardFactors.generalWork")}
+                  checked={true}
+                  disabled={true}
+                  className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-not-allowed opacity-60"
+                />
+                <span className="ml-3 text-slate-300">一般作業</span>
+              </label>
+              <label className="flex items-center cursor-pointer group">
+                <input
+                  type="checkbox"
+                  {...register("hazardFactors.hotWork", {
+                    onChange: () => {
+                      updateOtherHazardFactors();
+                    }
+                  })}
                   className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
                 />
-                <span className="ml-3 text-slate-300 group-hover:text-white transition-colors">一般作業</span>
+                <span className="ml-3 text-slate-300 group-hover:text-white transition-colors">動火作業</span>
                 <span className="ml-2 text-xs text-slate-500">（選填）</span>
               </label>
               <label className="flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
-                  {...register("hazardFactors.hotWork")}
-                  className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
-                />
-                <span className="ml-3 text-slate-300 group-hover:text-white transition-colors">動火作業</span>
-                <span className="ml-2 text-xs text-amber-400">（必勾）</span>
-              </label>
-              <label className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  {...register("hazardFactors.confinedSpace")}
+                  {...register("hazardFactors.confinedSpace", {
+                    onChange: () => {
+                      updateOtherHazardFactors();
+                    }
+                  })}
                   className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
                 />
                 <span className="ml-3 text-slate-300 group-hover:text-white transition-colors">局限空間</span>
@@ -392,12 +522,38 @@ export default function NewApplicationPage() {
               <label className="flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
-                  {...register("hazardFactors.workAtHeight")}
+                  {...register("hazardFactors.workAtHeight", {
+                    onChange: () => {
+                      updateOtherHazardFactors();
+                    }
+                  })}
                   className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
                 />
                 <span className="ml-3 text-slate-300 group-hover:text-white transition-colors">高處作業及電梯維修保養</span>
                 <span className="ml-2 text-xs text-slate-500">（選填）</span>
               </label>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                一般作業危害因素說明
+              </label>
+              <textarea
+                {...register("hazardFactorsDescription")}
+                defaultValue="一般安全須知及施工安全須知、跌倒、有害物、墜/滾落、物料掉落、感電、火災、溺水、被夾被捲、熱危害、道路及堆高機等"
+                rows={4}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none"
+              />
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                其他作業危害因素說明
+              </label>
+              <textarea
+                {...register("otherHazardFactorsDescription")}
+                rows={4}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none"
+                placeholder="請描述其他作業相關的危害因素"
+              />
             </div>
           </section>
 
@@ -502,41 +658,22 @@ export default function NewApplicationPage() {
                   </div>
                 )}
 
-                {/* 日期和工作編號 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      日期 <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      {...register("hazardousOperations.hotWorkDetails.date")}
-                      className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
-                    />
-                    {errors.hazardousOperations?.hotWorkDetails?.date && (
-                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.hazardousOperations.hotWorkDetails.date.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      工作編號 <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      {...register("hazardousOperations.hotWorkDetails.workOrderNumber")}
-                      className="w-full bg-blue-500/10 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
-                      placeholder="請輸入工作編號"
-                    />
-                    {errors.hazardousOperations?.hotWorkDetails?.workOrderNumber && (
-                      <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.hazardousOperations.hotWorkDetails.workOrderNumber.message}
-                      </p>
-                    )}
-                  </div>
+                {/* 日期 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    日期 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    {...register("hazardousOperations.hotWorkDetails.date")}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-mono"
+                  />
+                  {errors.hazardousOperations?.hotWorkDetails?.date && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.hazardousOperations.hotWorkDetails.date.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* 操作地點 */}

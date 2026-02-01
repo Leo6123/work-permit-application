@@ -6,7 +6,6 @@ interface HotWorkDetails {
   personnelType: "employee" | "contractor";
   contractorName?: string;
   date: string;
-  workOrderNumber: string;
   operationLocation: string;
   workToBePerformed: string;
   operatorName: string;
@@ -93,15 +92,9 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
 
             {/* 基本資訊表格 */}
             <div className="mt-2 text-xs">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="font-bold">日期</span>
-                  <div className="border-b border-black">{hotWorkDetails.date}</div>
-                </div>
-                <div>
-                  <span className="font-bold">工作編號</span>
-                  <div className="border-b border-black">{hotWorkDetails.workOrderNumber}</div>
-                </div>
+              <div>
+                <span className="font-bold">日期</span>
+                <div className="border-b border-black">{hotWorkDetails.date}</div>
               </div>
               <div className="mt-1">
                 <span className="font-bold">操作地點（建築/樓層/物體）</span>
@@ -343,10 +336,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
 
             {/* 基本資訊 */}
             <div className="mt-2 text-xs">
-              <div className="grid grid-cols-2 gap-2">
-                <div>日期<div className="border-b border-black">{hotWorkDetails.date}</div></div>
-                <div>工作編號<div className="border-b border-black">{hotWorkDetails.workOrderNumber}</div></div>
-              </div>
+              <div>日期<div className="border-b border-black">{hotWorkDetails.date}</div></div>
               <div className="mt-1">操作地點（建築/樓層/物體）<div className="border-b border-black">{hotWorkDetails.operationLocation}</div></div>
               <div className="mt-1">待進行的作業<div className="border-b border-black">{hotWorkDetails.workToBePerformed}</div></div>
               <div className="grid grid-cols-2 gap-2 mt-1">

@@ -130,7 +130,7 @@ export default function Home() {
               Construction Work Permit System
             </p>
             <p className="text-xs text-slate-500">
-              線上施工安全作業許可申請系統
+              施工安全作業許可線上申請系統
             </p>
           </div>
         </div>
