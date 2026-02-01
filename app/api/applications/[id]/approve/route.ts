@@ -50,6 +50,16 @@ export async function POST(
 
     const data = validationResult.data;
 
+    // 驗證作業區域主管審核時，通過時必須提供火警巡查員姓名
+    if (isAreaSupervisor && data.action === "approve" && application.status === "pending_area_supervisor") {
+      if (!body.fireWatcherName || typeof body.fireWatcherName !== "string" || body.fireWatcherName.trim() === "") {
+        return NextResponse.json(
+          { error: "作業區域主管審核通過時，必須填寫火警巡查員姓名" },
+          { status: 400 }
+        );
+      }
+    }
+
     // 驗證審核人員權限
     // 先檢查當前狀態應該由誰審核
     if (application.status === "pending_area_supervisor") {
@@ -144,9 +154,19 @@ export async function POST(
       newStatus = "approved";
     }
 
+    // 如果作業區域主管審核通過，更新火警巡查員姓名
+    const updateData: any = { status: newStatus };
+    if (isAreaSupervisor && data.action === "approve" && body.fireWatcherName) {
+      const hazardousOperations = JSON.parse(application.hazardousOperations);
+      if (hazardousOperations.hotWorkDetails) {
+        hazardousOperations.hotWorkDetails.fireWatcherName = body.fireWatcherName;
+        updateData.hazardousOperations = JSON.stringify(hazardousOperations);
+      }
+    }
+
     const updatedApplication = await prisma.workPermitApplication.update({
       where: { id: params.id },
-      data: { status: newStatus },
+      data: updateData,
     });
 
     // 生成工單編號

@@ -22,6 +22,7 @@ export default function ApplicationDetailPage() {
     approverEmail: "",
     action: "approve" as ApprovalAction,
     comment: "",
+    fireWatcherName: "",
   });
   const [error, setError] = useState<string | null>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
@@ -63,6 +64,12 @@ export default function ApplicationDetailPage() {
       return;
     }
 
+    // 作業區域主管審核通過時，必須填寫火警巡查員姓名
+    if (isAreaSupervisorApproval && approvalData.action === "approve" && !approvalData.fireWatcherName.trim()) {
+      setError("請輸入火警巡查員姓名");
+      return;
+    }
+
     setIsApproving(true);
     setError(null);
 
@@ -87,7 +94,7 @@ export default function ApplicationDetailPage() {
       }
 
       await fetchApplication();
-      setApprovalData({ approverEmail: "", action: "approve", comment: "" });
+      setApprovalData({ approverEmail: "", action: "approve", comment: "", fireWatcherName: "" });
     } catch (err) {
       setError("審核時發生錯誤，請稍後再試");
       setIsApproving(false);
@@ -466,12 +473,21 @@ export default function ApplicationDetailPage() {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-4 border-b border-slate-700 pb-2">審核記錄</h3>
                     <div className="space-y-4">
-                      {application.approvalLogs.map((log) => (
+                      {[...application.approvalLogs].sort((a, b) => {
+                        // 定義排序優先級：作業區域主管 > EHS Manager > 營運主管
+                        const getPriority = (type: string) => {
+                          if (type === "area_supervisor") return 1;
+                          if (type === "ehs_manager") return 2;
+                          if (type === "department_manager") return 3;
+                          return 4;
+                        };
+                        return getPriority(a.approverType) - getPriority(b.approverType);
+                      }).map((log) => (
                         <div key={log.id} className="border-l-4 border-cyan-500 pl-4 py-2">
                           <div className="text-slate-300">
                             <div className="font-medium">
                               {log.approverType === "area_supervisor" ? "作業區域主管" : 
-                               log.approverType === "ehs_manager" ? "EHS Manager" : "部門主管"}
+                               log.approverType === "ehs_manager" ? "EHS Manager" : "營運主管"}
                             </div>
                             <div className="text-sm text-slate-500">{log.approverEmail}</div>
                             <div className="mt-1">
@@ -567,7 +583,7 @@ export default function ApplicationDetailPage() {
 
             <div className="text-slate-600 text-2xl">→</div>
 
-            {/* 部門主管審核 */}
+            {/* 營運主管審核 */}
             <div className={`flex-1 p-4 rounded-lg border ${
               application.status === "pending_manager" 
                 ? "bg-amber-500/10 border-amber-500/30" 
@@ -577,7 +593,7 @@ export default function ApplicationDetailPage() {
                     ? "bg-red-500/10 border-red-500/30"
                     : "bg-slate-800/50 border-slate-700"
             }`}>
-              <div className="font-medium text-white">部門主管審核</div>
+              <div className="font-medium text-white">營運主管審核</div>
               <div className={`text-sm mt-1 ${
                 application.status === "pending_manager" 
                   ? "text-amber-400" 
@@ -671,21 +687,72 @@ export default function ApplicationDetailPage() {
 
           {/* 工作環境危害因素 */}
           <div className="border-t border-slate-800 pt-6">
-            <label className="block text-sm font-medium text-slate-400 mb-3">工作環境危害因素</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="block text-sm font-medium text-slate-400 mb-3">一般作業的工作環境危害因素</label>
+            <div className="flex flex-wrap gap-2 mb-4">
               {application.hazardFactors.generalWork && (
                 <span className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-sm text-slate-300">✓ 一般作業</span>
               )}
-              {application.hazardFactors.hotWork && (
-                <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-sm text-amber-400">✓ 動火作業</span>
-              )}
-              {application.hazardFactors.confinedSpace && (
-                <span className="px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-sm text-orange-400">✓ 局限空間</span>
-              )}
-              {application.hazardFactors.workAtHeight && (
-                <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full text-sm text-red-400">✓ 高處作業及電梯維修保養</span>
-              )}
             </div>
+            {(() => {
+              // 獲取保存的說明，如果沒有則使用默認值
+              const savedDescription = (application.hazardFactors as any)?.description;
+              const savedOtherDescription = (application.hazardFactors as any)?.otherDescription;
+              
+              // 默認的一般作業危害因素說明
+              const defaultDescription = "一般安全須知及施工安全須知、跌倒、有害物、墜/滾落、物料掉落、感電、火災、溺水、被夾被捲、熱危害、道路及堆高機等";
+              
+              // 根據勾選的作業類型生成默認的其他作業危害因素說明
+              let defaultOtherDescription = "";
+              if (application.hazardFactors.hotWork) {
+                defaultOtherDescription = "火災";
+              } else if (application.hazardFactors.confinedSpace) {
+                defaultOtherDescription = "有害物、墜/滾落、物料掉落、感電、火災、溺水";
+              } else if (application.hazardFactors.workAtHeight) {
+                defaultOtherDescription = "墜/滾落、物料掉落、感電、吊掛、被夾被捲";
+              }
+              
+              // 決定要顯示的內容
+              // 如果勾選了一般作業，或者有任何其他作業類型，都顯示一般作業說明
+              const hasAnyWorkType = application.hazardFactors.generalWork || 
+                                     application.hazardFactors.hotWork || 
+                                     application.hazardFactors.confinedSpace || 
+                                     application.hazardFactors.workAtHeight;
+              const displayDescription = hasAnyWorkType 
+                ? (savedDescription || defaultDescription)
+                : savedDescription || "";
+              const displayOtherDescription = savedOtherDescription || defaultOtherDescription;
+              
+              return (
+                <>
+                  {displayDescription && (
+                    <div className="mb-4">
+                      <p className="text-slate-300 whitespace-pre-line bg-slate-800/50 border border-slate-700 rounded p-3 text-sm">
+                        {displayDescription}
+                      </p>
+                    </div>
+                  )}
+                  {displayOtherDescription && (
+                    <div className={displayDescription ? "mt-4" : ""}>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {application.hazardFactors.hotWork && (
+                          <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-sm text-amber-400">✓ 動火作業</span>
+                        )}
+                        {application.hazardFactors.confinedSpace && (
+                          <span className="px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-full text-sm text-orange-400">✓ 局限空間</span>
+                        )}
+                        {application.hazardFactors.workAtHeight && (
+                          <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full text-sm text-red-400">✓ 高處作業及電梯維修保養</span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-slate-400 mb-2">工作環境危害因素</p>
+                      <p className="text-slate-300 whitespace-pre-line bg-slate-800/50 border border-slate-700 rounded p-3 text-sm">
+                        {displayOtherDescription}
+                      </p>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* 入廠作業人員 */}
@@ -717,7 +784,16 @@ export default function ApplicationDetailPage() {
               審核記錄
             </h3>
             <div className="space-y-4">
-              {application.approvalLogs.map((log) => (
+              {[...application.approvalLogs].sort((a, b) => {
+                // 定義排序優先級：作業區域主管 > EHS Manager > 營運主管
+                const getPriority = (type: string) => {
+                  if (type === "area_supervisor") return 1;
+                  if (type === "ehs_manager") return 2;
+                  if (type === "department_manager") return 3;
+                  return 4;
+                };
+                return getPriority(a.approverType) - getPriority(b.approverType);
+              }).map((log) => (
                 <div key={log.id} className={`border-l-4 pl-4 py-2 ${
                   log.action === "approve" ? "border-emerald-500" : "border-red-500"
                 }`}>
@@ -725,7 +801,7 @@ export default function ApplicationDetailPage() {
                     <div>
                       <div className="font-medium text-white">
                         {log.approverType === "area_supervisor" ? "作業區域主管" : 
-                         log.approverType === "ehs_manager" ? "EHS Manager" : "部門主管"}
+                         log.approverType === "ehs_manager" ? "EHS Manager" : "營運主管"}
                       </div>
                       <div className="text-sm text-slate-500 font-mono">{log.approverEmail}</div>
                       <div className="mt-1">
@@ -751,12 +827,137 @@ export default function ApplicationDetailPage() {
           </div>
         )}
 
+        {/* 共同作業擔任指揮、監督及協調之負責人員 */}
+        <div className="border-t border-slate-800 pt-6" id="joint-operations-form">
+          <div className="flex items-center justify-end mb-4">
+            <button
+              onClick={() => {
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  const formContent = document.getElementById('joint-operations-form-content')?.innerHTML || '';
+                  printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                      <head>
+                        <title>共同作業擔任指揮、監督及協調之負責人員</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 20px; }
+                          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                          th, td { border: 1px solid #000; padding: 4px; }
+                          th { background-color: #f0f0f0; }
+                          .signature-area { margin-bottom: 16px; }
+                          .signature-line { border-bottom: 1px solid #000; display: inline-block; min-width: 200px; }
+                        </style>
+                      </head>
+                      <body>
+                        ${formContent}
+                      </body>
+                    </html>
+                  `);
+                  printWindow.document.close();
+                  printWindow.print();
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
+            >
+              <Printer className="w-4 h-4" />
+              此頁列印表單
+            </button>
+          </div>
+          <div id="joint-operations-form-content" className="bg-white text-black p-4 rounded border-2 border-slate-300 shadow-lg">
+            {/* 標題 */}
+            <h2 className="text-xl font-bold text-center mb-4">共同作業擔任指揮、監督及協調之負責人員</h2>
+
+            {/* 簽名區域 */}
+            <div className="space-y-3 mb-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-48">廠內承攬作業負責人(監工)簽名:</span>
+                <div className="border-b border-black flex-1"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-32">承攬商名稱:</span>
+                  <div className="border-b border-black flex-1">{application.contractorInfo.name}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-40">承攬商施工現場負責人簽名:</span>
+                  <div className="border-b border-black flex-1">{application.contractorInfo.siteSupervisor}</div>
+                </div>
+              </div>
+              {application.personnelInfo.subcontractors && application.personnelInfo.subcontractors.length > 0 && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-32">再承攬商名稱:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors[0].name}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-40">再承攬商施工現場負責人簽名:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors[0].siteSupervisor}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 表格 */}
+            <div className="border-2 border-black">
+              <table className="w-full border-collapse text-xs">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-black p-1" colSpan={2}>入廠人員簽署<br/>(以中文正楷簽名)</th>
+                    <th className="border border-black p-1" rowSpan={2}>合格證</th>
+                    <th className="border border-black p-1" colSpan={2}>廠內承攬作業負責人(監工)確認</th>
+                  </tr>
+                  <tr className="bg-gray-100">
+                    <th className="border border-black p-1">類別</th>
+                    <th className="border border-black p-1">已接受協議組織須知、安全守則(現場危害告知及防範措施)及承攬商教育訓練</th>
+                    <th className="border border-black p-1">合格證過期或無合格證者有效保險證明 (至少三擇一), 未提供者不得入廠 (註:意外險須含意外體傷、意外死亡及失能)</th>
+                    <th className="border border-black p-1">確認者簽名</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[1, 2, 3, 4, 5, 6].map((row) => (
+                    <tr key={row}>
+                      <td className="border border-black p-1 align-top">
+                        <div className="flex gap-2">
+                          <span>☐ 承攬</span>
+                          <span>☐ 再承攬</span>
+                        </div>
+                      </td>
+                      <td className="border border-black p-1 align-top">
+                        <div className="border-b border-black mb-1 h-6"></div>
+                        <div className="text-center text-[10px]">年 <span className="border-b border-black inline-block w-12"></span> 月 <span className="border-b border-black inline-block w-12"></span> 日</div>
+                      </td>
+                      <td className="border border-black p-1 align-top">
+                        <div className="flex gap-2 flex-wrap">
+                          <span>☐ 效期內</span>
+                          <span>☐ 已過期</span>
+                          <span>☐ 無合格證</span>
+                        </div>
+                      </td>
+                      <td className="border border-black p-1 align-top">
+                        <div className="space-y-1 text-[10px]">
+                          <div>☐ 勞工職災保險+雇主補償責任險</div>
+                          <div>☐ 勞工職災保險+職災團險或意外險</div>
+                          <div>☐ 職災團險或意外險保額≥300萬元</div>
+                        </div>
+                      </td>
+                      <td className="border border-black p-1 align-top">
+                        <div className="border-b border-black h-8"></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         {/* 審核表單 */}
         {canApprove && (
           <div className="bg-slate-900/50 border border-cyan-500/30 p-6 rounded-lg backdrop-blur-sm">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Shield className="w-5 h-5 text-cyan-400" />
-              {isAreaSupervisorApproval ? "作業區域主管審核" : isEHSManagerApproval ? "EHS Manager 審核" : "部門主管審核"}
+              {isAreaSupervisorApproval ? "作業區域主管審核" : isEHSManagerApproval ? "EHS Manager 審核" : "營運主管審核"}
             </h3>
             <div className="space-y-4">
               <div>
@@ -771,6 +972,20 @@ export default function ApplicationDetailPage() {
                   placeholder="輸入您的 Email"
                 />
               </div>
+              {isAreaSupervisorApproval && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    火警巡查員姓名 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={approvalData.fireWatcherName}
+                    onChange={(e) => setApprovalData({ ...approvalData, fireWatcherName: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder-slate-600"
+                    placeholder="請輸入火警巡查員姓名"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">審核結果</label>
                 <div className="flex gap-6">
@@ -856,7 +1071,7 @@ export default function ApplicationDetailPage() {
                     className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
                   >
                     <Printer className="w-4 h-4" />
-                    列印許可證
+                    此頁列印許可證
                   </button>
                 </div>
                 <div 

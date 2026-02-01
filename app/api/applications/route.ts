@@ -63,19 +63,16 @@ export async function POST(request: NextRequest) {
 
     const data = validationResult.data;
 
-    // 驗證動火作業邏輯：若勾選動火作業，危險性作業的「動火」必須選擇
-    if (data.hazardFactors.hotWork && !data.hazardousOperations.hotWork) {
-      return NextResponse.json(
-        { error: "若勾選動火作業，危險性作業的「動火」必須選擇「是」或「否」" },
-        { status: 400 }
-      );
+    // 當勾選動火作業時，自動設定為「是」
+    if (data.hazardFactors.hotWork) {
+      data.hazardousOperations.hotWork = "yes";
     }
 
-    // 驗證動火作業詳細資訊：當選擇「是」時，必須填寫詳細資訊
-    if (data.hazardFactors.hotWork && data.hazardousOperations.hotWork === "yes") {
+    // 驗證動火作業詳細資訊：當勾選動火作業時，必須填寫詳細資訊
+    if (data.hazardFactors.hotWork) {
       if (!data.hazardousOperations.hotWorkDetails) {
         return NextResponse.json(
-          { error: "當選擇動火作業「是」時，必須填寫動火作業詳細資訊" },
+          { error: "當勾選動火作業時，必須填寫動火作業詳細資訊" },
           { status: 400 }
         );
       }
@@ -95,8 +92,8 @@ export async function POST(request: NextRequest) {
     const ehsManagerEmail = data.ehsManagerEmail || process.env.EHS_MANAGER_EMAIL || "ehs.manager@company.com";
     const departmentManagerEmail = data.departmentManagerEmail || getDepartmentManagerEmail(data.department);
 
-    // 檢查是否有動火作業且選擇「是」
-    const hasHotWork = data.hazardFactors.hotWork && data.hazardousOperations.hotWork === "yes";
+    // 檢查是否有動火作業
+    const hasHotWork = data.hazardFactors.hotWork;
     let areaSupervisorEmail: string | null = null;
     let initialStatus = "pending_ehs";
 

@@ -68,7 +68,6 @@ export default function NewApplicationPage() {
   });
 
   const hotWorkChecked = watch("hazardFactors.hotWork");
-  const hotWorkOperation = watch("hazardousOperations.hotWork");
   const hotWorkPersonnelType = watch("hazardousOperations.hotWorkDetails.personnelType");
   const applicantNameValue = watch("applicantName");
   const [customApplicantName, setCustomApplicantName] = useState("");
@@ -104,8 +103,7 @@ export default function NewApplicationPage() {
   }, []);
 
   const showCustomApplicant = isMounted && applicantNameValue === "其他";
-  const showHotWorkOperations = isMounted && hotWorkChecked;
-  const showHotWorkDetails = isMounted && hotWorkChecked && hotWorkOperation === "yes";
+  const showHotWorkDetails = isMounted && hotWorkChecked;
   const showContractorName = showHotWorkDetails && hotWorkPersonnelType === "contractor";
 
   const onSubmit = async (data: ApplicationFormInput) => {
@@ -124,11 +122,9 @@ export default function NewApplicationPage() {
         }
       }
 
-      // 驗證動火作業邏輯
-      if (data.hazardFactors.hotWork && !data.hazardousOperations.hotWork) {
-        setError("若勾選動火作業，危險性作業的「動火」必須選擇「是」或「否」");
-        setIsSubmitting(false);
-        return;
+      // 當勾選動火作業時，自動設定為「是」
+      if (data.hazardFactors.hotWork) {
+        data.hazardousOperations.hotWork = "yes";
       }
 
       console.log("提交申請資料:", data);
@@ -541,7 +537,9 @@ export default function NewApplicationPage() {
                 {...register("hazardFactorsDescription")}
                 defaultValue="一般安全須知及施工安全須知、跌倒、有害物、墜/滾落、物料掉落、感電、火災、溺水、被夾被捲、熱危害、道路及堆高機等"
                 rows={4}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none"
+                readOnly
+                disabled
+                className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-400 rounded px-3 py-2 resize-none cursor-not-allowed opacity-60"
               />
             </div>
             <div className="mt-4">
@@ -551,51 +549,12 @@ export default function NewApplicationPage() {
               <textarea
                 {...register("otherHazardFactorsDescription")}
                 rows={4}
-                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none"
+                readOnly
+                className="w-full bg-slate-800/50 border border-slate-700/50 text-slate-400 rounded px-3 py-2 resize-none cursor-not-allowed opacity-60"
                 placeholder="請描述其他作業相關的危害因素"
               />
             </div>
           </section>
-
-          {/* 危險性作業 */}
-          {showHotWorkOperations && (
-            <section className="space-y-4 bg-amber-500/5 border border-amber-500/30 rounded-lg p-4">
-              <h3 className="text-xl font-semibold text-white border-b border-slate-800 pb-2">
-                危險性作業（若有須另提出許可申請）
-              </h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">動火</label>
-                  <div className="flex gap-6">
-                    <label className="flex items-center cursor-pointer group">
-                      <input
-                        type="radio"
-                        value="yes"
-                        {...register("hazardousOperations.hotWork")}
-                        className="w-4 h-4 border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
-                      />
-                      <span className="ml-2 text-slate-300 group-hover:text-white transition-colors">是</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer group">
-                      <input
-                        type="radio"
-                        value="no"
-                        {...register("hazardousOperations.hotWork")}
-                        className="w-4 h-4 border-slate-700 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-2 cursor-pointer"
-                      />
-                      <span className="ml-2 text-slate-300 group-hover:text-white transition-colors">否</span>
-                    </label>
-                  </div>
-                  {errors.hazardousOperations?.hotWork && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.hazardousOperations.hotWork.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
 
           {/* 動火作業詳細資訊表格 */}
           {showHotWorkDetails && (
@@ -729,25 +688,6 @@ export default function NewApplicationPage() {
                     <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
                       <AlertCircle className="w-4 h-4" />
                       {errors.hazardousOperations.hotWorkDetails.operatorName.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* 火警巡查員姓名 */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    火警巡查員姓名 <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    {...register("hazardousOperations.hotWorkDetails.fireWatcherName")}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
-                    placeholder="請輸入火警巡查員姓名"
-                  />
-                  {errors.hazardousOperations?.hotWorkDetails?.fireWatcherName && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.hazardousOperations.hotWorkDetails.fireWatcherName.message}
                     </p>
                   )}
                 </div>

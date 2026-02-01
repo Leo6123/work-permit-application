@@ -87,6 +87,7 @@ export interface ApprovalRequest {
   approverEmail: string;
   action: ApprovalAction;
   comment?: string;                // 附註說明（拒絕時必填，特別是 EHS Manager）
+  fireWatcherName?: string;        // 火警巡查員姓名（作業區域主管審核通過時必填）
 }
 
 // 申請記錄（包含審核記錄）

@@ -2,36 +2,34 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Shield, Plus, Activity, Clock, CheckCircle, XCircle, FileText, Search } from "lucide-react";
+import { Shield, Plus, Activity, Clock, CheckCircle, XCircle, FileText, Search, Trash2 } from "lucide-react";
 import type { ApplicationWithLogs } from "@/types/application";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 
 export default function Home() {
+  const [allApplications, setAllApplications] = useState<ApplicationWithLogs[]>([]);
   const [applications, setApplications] = useState<ApplicationWithLogs[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // 載入完整的申請列表（用於統計）
   useEffect(() => {
-    fetchApplications();
-  }, [activeTab]);
+    fetchAllApplications();
+  }, []);
 
-  const fetchApplications = async () => {
+  // 當 activeTab 改變時，篩選申請列表
+  useEffect(() => {
+    filterApplications();
+  }, [activeTab, allApplications]);
+
+  const fetchAllApplications = async () => {
     try {
       setLoading(true);
-      const statusMap: Record<string, string> = {
-        all: "",
-        area_supervisor: "pending_area_supervisor",
-        ehs: "pending_ehs",
-        manager: "pending_manager",
-        approved: "approved",
-        rejected: "rejected",
-      };
-      const status = statusMap[activeTab] || "";
-      const url = status ? `/api/applications?status=${status}` : "/api/applications";
-      const response = await fetch(url);
+      const response = await fetch("/api/applications");
       const data = await response.json();
-      setApplications(data);
+      setAllApplications(data);
+      setApplications(data); // 初始顯示全部
     } catch (error) {
       console.error("Error fetching applications:", error);
     } finally {
@@ -39,29 +37,43 @@ export default function Home() {
     }
   };
 
-  // 計算統計數據
-  // 最新申請：顯示所有申請數量（按創建時間排序，最新的在前）
-  const latestApplications = applications.length;
+  const filterApplications = () => {
+    const statusMap: Record<string, string> = {
+      all: "",
+      area_supervisor: "pending_area_supervisor",
+      ehs: "pending_ehs",
+      manager: "pending_manager",
+      approved: "approved",
+      rejected: "rejected",
+    };
+    const status = statusMap[activeTab] || "";
+    
+    if (status === "") {
+      setApplications(allApplications);
+    } else {
+      const filtered = allApplications.filter((app) => app.status === status);
+      setApplications(filtered);
+    }
+  };
 
-  const areaSupervisorPending = applications.filter((app) => app.status === "pending_area_supervisor").length;
-  const ehsPending = applications.filter((app) => app.status === "pending_ehs").length;
+  // 計算統計數據（基於完整的申請列表）
+  const totalApplications = allApplications.length;
+  const managerPending = allApplications.filter((app) => app.status === "pending_manager").length;
+  // 最新申請：顯示所有申請數量（按創建時間排序，最新的在前）
+  const latestApplications = allApplications.length;
+
+  const areaSupervisorPending = allApplications.filter((app) => app.status === "pending_area_supervisor").length;
+  const ehsPending = allApplications.filter((app) => app.status === "pending_ehs").length;
   // 批准施工：只統計已通過全部流程的申請（status === "approved"），拒絕的申請不納入
-  const approvedApplications = applications.filter((app) => app.status === "approved").length;
+  const approvedApplications = allApplications.filter((app) => app.status === "approved").length;
 
   const stats = [
-    { label: "最新申請", value: latestApplications, icon: FileText, color: "text-blue-400", border: "border-blue-500/30" },
-    { label: "作業區域主管待審", value: areaSupervisorPending, icon: Activity, color: "text-purple-400", border: "border-purple-500/30" },
-    { label: "EHS 待審", value: ehsPending, icon: Activity, color: "text-amber-400", border: "border-amber-500/30" },
-    { label: "批准施工", value: approvedApplications, icon: Shield, color: "text-emerald-400", border: "border-emerald-500/30" },
-  ];
-
-  const tabs = [
-    { id: "all", label: "全部案件" },
-    { id: "area_supervisor", label: "待作業區域主管審核" },
-    { id: "ehs", label: "待 EHS 審核" },
-    { id: "manager", label: "待主管審核" },
-    { id: "approved", label: "已通過/批准施工" },
-    { id: "rejected", label: "已拒絕" },
+    { label: "最新申請", value: latestApplications, icon: FileText, color: "text-blue-400", border: "border-blue-500/30", tabId: "all" },
+    { label: "全部案件", value: totalApplications, icon: FileText, color: "text-slate-400", border: "border-slate-500/30", tabId: "all" },
+    { label: "作業區域主管", value: areaSupervisorPending, icon: Activity, color: "text-purple-400", border: "border-purple-500/30", tabId: "area_supervisor" },
+    { label: "EHS 待審", value: ehsPending, icon: Activity, color: "text-amber-400", border: "border-amber-500/30", tabId: "ehs" },
+    { label: "營運主管審核", value: managerPending, icon: Clock, color: "text-blue-400", border: "border-blue-500/30", tabId: "manager" },
+    { label: "批准施工", value: approvedApplications, icon: Shield, color: "text-emerald-400", border: "border-emerald-500/30", tabId: "approved" },
   ];
 
   // 過濾申請列表（根據搜尋）
@@ -111,6 +123,33 @@ export default function Home() {
     });
   };
 
+  const handleDelete = async (e: React.MouseEvent, applicationId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm("確定要刪除此申請嗎？此操作無法復原。")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/applications/${applicationId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "刪除失敗");
+        return;
+      }
+
+      // 重新載入申請列表
+      fetchApplications();
+    } catch (error) {
+      console.error("Error deleting application:", error);
+      alert("刪除時發生錯誤，請稍後再試");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-500/30">
       {/* 背景網格裝飾 */}
@@ -152,11 +191,14 @@ export default function Home() {
 
       <main className="relative max-w-7xl mx-auto p-6 z-10 space-y-8">
         {/* 儀表板數據卡 (HUD Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {stats.map((stat, idx) => (
-            <div
+            <button
               key={idx}
-              className={`bg-slate-900/50 border ${stat.border} p-4 rounded-lg backdrop-blur-sm flex items-center justify-between group hover:bg-slate-800/80 transition-colors`}
+              onClick={() => setActiveTab(stat.tabId)}
+              className={`bg-slate-900/50 border ${stat.border} p-4 rounded-lg backdrop-blur-sm flex items-center justify-between group hover:bg-slate-800/80 transition-colors cursor-pointer ${
+                activeTab === stat.tabId ? "ring-2 ring-cyan-500/50 bg-slate-800/80" : ""
+              }`}
             >
               <div>
                 <p className="text-slate-500 text-xs font-mono uppercase mb-1">{stat.label}</p>
@@ -165,32 +207,12 @@ export default function Home() {
               <stat.icon
                 className={`w-8 h-8 ${stat.color} opacity-80 group-hover:scale-110 transition-transform`}
               />
-            </div>
+            </button>
           ))}
         </div>
 
-        {/* 控制區：搜尋與篩選 */}
-        <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 border-b border-slate-800 pb-2">
-          {/* Tab 切換 */}
-          <div className="flex gap-1 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                }}
-                className={`px-4 py-2 text-sm font-medium transition-all relative whitespace-nowrap ${
-                  activeTab === tab.id ? "text-cyan-400" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-[-9px] left-0 w-full h-[2px] bg-cyan-500 shadow-[0_0_10px_#06b6d4]"></span>
-                )}
-              </button>
-            ))}
-          </div>
-
+        {/* 控制區：搜尋 */}
+        <div className="flex flex-col md:flex-row justify-end items-end md:items-center gap-4 border-b border-slate-800 pb-2">
           {/* 搜尋框 */}
           <div className="relative group w-full md:w-64">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500 group-focus-within:text-cyan-400" />
@@ -250,44 +272,55 @@ export default function Home() {
               const status = getStatusBadge(app.status);
               const StatusIcon = status.icon;
               return (
-                <Link
+                <div
                   key={app.id}
-                  href={`/applications/${app.id}`}
-                  className="block bg-slate-900/50 border border-slate-800 rounded-lg p-4 hover:bg-slate-800/80 hover:border-slate-700 transition-all group"
+                  className="block bg-slate-900/50 border border-slate-800 rounded-lg p-4 hover:bg-slate-800/80 hover:border-slate-700 transition-all group relative"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`px-2 py-1 rounded border ${status.bgColor} flex items-center gap-1.5`}>
-                            <StatusIcon className={`w-3.5 h-3.5 ${status.color}`} />
-                            <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
+                  <Link
+                    href={`/applications/${app.id}`}
+                    className="block"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`px-2 py-1 rounded border ${status.bgColor} flex items-center gap-1.5`}>
+                              <StatusIcon className={`w-3.5 h-3.5 ${status.color}`} />
+                              <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
+                            </div>
+                            <span className="text-xs font-mono text-slate-500">
+                              {app.workOrderNumber || getWorkOrderNumberFromDate(app.createdAt)}
+                            </span>
                           </div>
-                          <span className="text-xs font-mono text-slate-500">
-                            {app.workOrderNumber || getWorkOrderNumberFromDate(app.createdAt)}
-                          </span>
+                        </div>
+                        <h3 className="text-white font-medium mb-1 group-hover:text-cyan-400 transition-colors">
+                          {app.workArea}
+                        </h3>
+                        <p className="text-sm text-slate-400 mb-2">{app.workContent}</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                          <span>申請人: {app.applicantName}</span>
+                          <span>部門: {app.department}</span>
+                          {app.contractorInfo && typeof app.contractorInfo === "object" && (
+                            <span>承攬商: {app.contractorInfo.name}</span>
+                          )}
                         </div>
                       </div>
-                      <h3 className="text-white font-medium mb-1 group-hover:text-cyan-400 transition-colors">
-                        {app.workArea}
-                      </h3>
-                      <p className="text-sm text-slate-400 mb-2">{app.workContent}</p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                        <span>申請人: {app.applicantName}</span>
-                        <span>部門: {app.department}</span>
-                        {app.contractorInfo && typeof app.contractorInfo === "object" && (
-                          <span>承攬商: {app.contractorInfo.name}</span>
-                        )}
+                      <div className="text-right text-xs text-slate-500 whitespace-nowrap">
+                        <div className="mb-1">{formatDateShort(app.createdAt)}</div>
+                        <div className="text-slate-600">
+                          {formatDateShort(app.workTimeStart)} - {formatDateShort(app.workTimeEnd)}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right text-xs text-slate-500 whitespace-nowrap">
-                      <div className="mb-1">{formatDateShort(app.createdAt)}</div>
-                      <div className="text-slate-600">
-                        {formatDateShort(app.workTimeStart)} - {formatDateShort(app.workTimeEnd)}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                  <button
+                    onClick={(e) => handleDelete(e, app.id)}
+                    className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                    title="刪除申請"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               );
             })}
           </div>
