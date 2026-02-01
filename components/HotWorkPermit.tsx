@@ -43,7 +43,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
           className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
         >
           <Printer className="w-4 h-4" />
-          此頁列印許可證 (4頁)
+          此頁列印許可證 (3頁)
         </button>
       </div>
 
@@ -651,94 +651,6 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
         {/* FM Global Logo */}
         <div className="flex justify-end p-4">
           <img src="/images/FM.png" alt="FM Global" className="h-16" />
-        </div>
-      </div>
-
-      {/* ========== 第4頁：共同作業擔任指揮、監督及協調之負責人員 ========== */}
-      <div className="permit-page bg-white">
-        <div className="border-2 border-black p-4">
-          {/* 標題 */}
-          <h2 className="text-xl font-bold text-center mb-4">共同作業擔任指揮、監督及協調之負責人員</h2>
-
-          {/* 簽名區域 */}
-          <div className="space-y-3 mb-4 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-48">廠內承攬作業負責人(監工)簽名:</span>
-              <div className="border-b border-black flex-1"></div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <span className="w-32">承攬商名稱:</span>
-                <div className="border-b border-black flex-1"></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-40">承攬商施工現場負責人簽名:</span>
-                <div className="border-b border-black flex-1"></div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <span className="w-32">再承攬商名稱:</span>
-                <div className="border-b border-black flex-1"></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-40">再承攬商施工現場負責人簽名:</span>
-                <div className="border-b border-black flex-1"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* 表格 */}
-          <div className="border-2 border-black">
-            <table className="w-full border-collapse text-xs">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-black p-1" colSpan={2}>入廠人員簽署<br/>(以中文正楷簽名)</th>
-                  <th className="border border-black p-1" rowSpan={2}>合格證</th>
-                  <th className="border border-black p-1" colSpan={2}>廠內承攬作業負責人(監工)確認</th>
-                </tr>
-                <tr className="bg-gray-100">
-                  <th className="border border-black p-1">類別</th>
-                  <th className="border border-black p-1">已接受協議組織須知、安全守則(現場危害告知及防範措施)及承攬商教育訓練</th>
-                  <th className="border border-black p-1">合格證過期或無合格證者有效保險證明 (至少三擇一), 未提供者不得入廠 (註:意外險須含意外體傷、意外死亡及失能)</th>
-                  <th className="border border-black p-1">確認者簽名</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[1, 2, 3, 4, 5, 6].map((row) => (
-                  <tr key={row}>
-                    <td className="border border-black p-1 align-top">
-                      <div className="flex gap-2">
-                        <span>☐ 承攬</span>
-                        <span>☐ 再承攬</span>
-                      </div>
-                    </td>
-                    <td className="border border-black p-1 align-top">
-                      <div className="border-b border-black mb-1 h-6"></div>
-                      <div className="text-center text-[10px]">年 <span className="border-b border-black inline-block w-12"></span> 月 <span className="border-b border-black inline-block w-12"></span> 日</div>
-                    </td>
-                    <td className="border border-black p-1 align-top">
-                      <div className="flex gap-2 flex-wrap">
-                        <span>☐ 效期內</span>
-                        <span>☐ 已過期</span>
-                        <span>☐ 無合格證</span>
-                      </div>
-                    </td>
-                    <td className="border border-black p-1 align-top">
-                      <div className="space-y-1 text-[10px]">
-                        <div>☐ 勞工職災保險+雇主補償責任險</div>
-                        <div>☐ 勞工職災保險+職災團險或意外險</div>
-                        <div>☐ 職災團險或意外險保額≥300萬元</div>
-                      </div>
-                    </td>
-                    <td className="border border-black p-1 align-top">
-                      <div className="border-b border-black h-8"></div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
 

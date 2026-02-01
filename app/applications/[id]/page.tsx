@@ -244,6 +244,215 @@ export default function ApplicationDetailPage() {
     window.print();
   };
 
+  const handlePrintAll = () => {
+    if (!application) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    // 獲取許可證表單的 HTML
+    let permitHtml = '';
+    if (shouldShowHotWorkPermit && hotWorkDetails) {
+      const permitElement = document.getElementById('hot-work-permit');
+      if (permitElement) {
+        permitHtml = permitElement.innerHTML;
+      }
+    } else if (shouldShowConfinedSpacePermit) {
+      const permitElement = document.getElementById('confined-space-permit');
+      if (permitElement) {
+        permitHtml = permitElement.innerHTML;
+      }
+    } else if (shouldShowWorkAtHeightPermit) {
+      const permitElement = document.getElementById('work-at-height-permit');
+      if (permitElement) {
+        permitHtml = permitElement.innerHTML;
+      }
+    }
+
+    // 獲取共同作業表單的 HTML
+    const jointOperationsElement = document.getElementById('joint-operations-form-content');
+    const jointOperationsHtml = jointOperationsElement ? jointOperationsElement.innerHTML : '';
+
+    // 生成申請詳情的 HTML（白底黑字）
+    const applicationDetailHtml = `
+      <div style="background: white; color: black; padding: 20px; font-family: Arial, sans-serif;">
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid black; padding-bottom: 20px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: black;">施工安全作業許可申請表</h1>
+          <p style="font-size: 14px; color: #333; margin: 5px 0;">
+            工單編號：${application.workOrderNumber || getWorkOrderNumberFromDate(application.createdAt)}
+          </p>
+          <p style="font-size: 14px; color: #333; margin: 5px 0;">
+            申請狀態：已通過 | 申請日期：${formatDate(application.createdAt)}
+          </p>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: black;">申請人資訊</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; color: #333;">
+            <div>
+              <span style="color: #666;">申請人：</span>
+              <span style="margin-left: 10px;">${application.applicantName}</span>
+            </div>
+            <div>
+              <span style="color: #666;">部門：</span>
+              <span style="margin-left: 10px;">${application.department}</span>
+            </div>
+            <div>
+              <span style="color: #666;">Email：</span>
+              <span style="margin-left: 10px;">${application.applicantEmail || "未提供"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: black;">作業時間</h3>
+          <div style="color: #333;">
+            <div style="margin-bottom: 10px;">
+              <span style="color: #666;">開始時間：</span>
+              <span style="margin-left: 10px;">${formatDate(application.workTimeStart)}</span>
+            </div>
+            <div>
+              <span style="color: #666;">結束時間：</span>
+              <span style="margin-left: 10px;">${formatDate(application.workTimeEnd)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: black;">施工資訊</h3>
+          <div style="color: #333;">
+            <div style="margin-bottom: 10px;">
+              <span style="color: #666;">施工區域：</span>
+              <span style="margin-left: 10px;">${application.workArea}</span>
+            </div>
+            <div>
+              <span style="color: #666;">施工內容：</span>
+              <span style="margin-left: 10px;">${application.workContent}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: black;">一般作業的工作環境危害因素</h3>
+          <div style="margin-bottom: 15px;">
+            ${application.hazardFactors.generalWork ? '<span style="display: inline-block; padding: 5px 15px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 20px; margin-right: 10px; margin-bottom: 10px; color: #333;">✓ 一般作業</span>' : ''}
+            ${application.hazardFactors.hotWork ? '<span style="display: inline-block; padding: 5px 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 20px; margin-right: 10px; margin-bottom: 10px; color: #856404;">✓ 動火作業</span>' : ''}
+            ${application.hazardFactors.confinedSpace ? '<span style="display: inline-block; padding: 5px 15px; background: #fff3cd; border: 1px solid #fd7e14; border-radius: 20px; margin-right: 10px; margin-bottom: 10px; color: #856404;">✓ 局限空間</span>' : ''}
+            ${application.hazardFactors.workAtHeight ? '<span style="display: inline-block; padding: 5px 15px; background: #f8d7da; border: 1px solid #dc3545; border-radius: 20px; margin-right: 10px; margin-bottom: 10px; color: #721c24;">✓ 高處作業及電梯維修保養</span>' : ''}
+          </div>
+          ${(application.hazardFactors as any)?.description ? `
+            <div style="margin-bottom: 15px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; color: #333;">
+              ${(application.hazardFactors as any).description}
+            </div>
+          ` : ''}
+          ${(application.hazardFactors as any)?.otherDescription ? `
+            <div style="margin-top: 15px;">
+              <p style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #333;">工作環境危害因素</p>
+              <div style="padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; color: #333;">
+                ${(application.hazardFactors as any).otherDescription}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        <div style="margin-bottom: 30px;">
+          <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: black;">入廠作業人員</h3>
+          <div style="color: #333;">
+            <div style="margin-bottom: 10px;">
+              <span style="color: #666;">承攬商名稱：</span>
+              <span style="margin-left: 10px;">${application.contractorInfo.name}</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <span style="color: #666;">現場負責人：</span>
+              <span style="margin-left: 10px;">${application.contractorInfo.siteSupervisor}</span>
+            </div>
+            <div>
+              <span style="color: #666;">施工人員：</span>
+              <span style="margin-left: 10px;">
+                ${Array.isArray(application.contractorInfo.personnel)
+                  ? application.contractorInfo.personnel.join("、")
+                  : application.contractorInfo.personnel}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        ${application.approvalLogs.length > 0 ? `
+          <div style="margin-bottom: 30px;">
+            <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; color: black;">審核記錄</h3>
+            <div>
+              ${[...application.approvalLogs].sort((a, b) => {
+                const getPriority = (type: string) => {
+                  if (type === "area_supervisor") return 1;
+                  if (type === "ehs_manager") return 2;
+                  if (type === "department_manager") return 3;
+                  return 4;
+                };
+                return getPriority(a.approverType) - getPriority(b.approverType);
+              }).map((log) => `
+                <div style="margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-left: 4px solid ${log.action === "approve" ? "#28a745" : "#dc3545"}; border-radius: 5px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <div>
+                      <div style="font-weight: bold; color: #333; margin-bottom: 5px;">
+                        ${log.approverType === "area_supervisor" ? "作業區域主管" : 
+                          log.approverType === "ehs_manager" ? "EHS Manager" : "營運主管"}
+                      </div>
+                      <div style="font-size: 12px; color: #666; font-family: monospace;">${log.approverEmail}</div>
+                      <div style="margin-top: 5px;">
+                        <span style="display: inline-block; padding: 3px 10px; border-radius: 3px; font-size: 12px; font-weight: bold; 
+                          background: ${log.action === "approve" ? "#d4edda" : "#f8d7da"}; 
+                          color: ${log.action === "approve" ? "#155724" : "#721c24"}; 
+                          border: 1px solid ${log.action === "approve" ? "#c3e6cb" : "#f5c6cb"};">
+                          ${log.action === "approve" ? "通過" : "拒絕"}
+                        </span>
+                      </div>
+                    </div>
+                    <div style="font-size: 12px; color: #666; font-family: monospace;">${formatDate(log.approvedAt)}</div>
+                  </div>
+                  ${log.comment ? `
+                    <div style="margin-top: 10px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; color: #333;">
+                      <span style="color: #666;">附註說明：</span>${log.comment}
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    // 組合所有內容
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>施工安全作業許可申請 - 完整列印</title>
+          <style>
+            body { margin: 0; padding: 0; }
+            .page-break { page-break-after: always; }
+            @media print {
+              .page-break { page-break-after: always; }
+            }
+          </style>
+        </head>
+        <body style="background: white; color: black;">
+          ${applicationDetailHtml}
+          ${jointOperationsHtml ? `<div class="page-break" style="padding: 20px;">${jointOperationsHtml}</div>` : ''}
+          ${permitHtml ? `<div class="page-break" style="padding: 20px;">${permitHtml}</div>` : ''}
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(fullHtml);
+    printWindow.document.close();
+    
+    // 等待內容載入後列印
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
+
   // 條件返回（在所有 hooks 之後）
   if (loading) {
     return (
@@ -336,14 +545,23 @@ export default function ApplicationDetailPage() {
           </div>
           <div className="flex items-center gap-3">
             {application && application.status === "approved" && (
-              <button
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="w-4 h-4" />
-                {isGeneratingPDF ? "生成中..." : "下載 PDF"}
-              </button>
+              <>
+                <button
+                  onClick={handlePrintAll}
+                  className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
+                >
+                  <Printer className="w-4 h-4" />
+                  列印全部
+                </button>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isGeneratingPDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4" />
+                  {isGeneratingPDF ? "生成中..." : "下載 PDF"}
+                </button>
+              </>
             )}
             <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${status.bgColor} border ${status.borderColor}`}>
               <StatusIcon className={`w-5 h-5 ${status.color}`} />
