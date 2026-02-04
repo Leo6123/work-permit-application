@@ -143,7 +143,7 @@ export default function Home() {
       }
 
       // 重新載入申請列表
-      fetchApplications();
+      fetchAllApplications();
     } catch (error) {
       console.error("Error deleting application:", error);
       alert("刪除時發生錯誤，請稍後再試");
