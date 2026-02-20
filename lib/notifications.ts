@@ -46,7 +46,7 @@ export async function sendNotification(data: NotificationData): Promise<void> {
               前往審核
             </a>
           </div>
-        ` : ''}
+        ` : ""}
       </div>
       <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
         <p style="color: #6b7280; font-size: 12px; margin: 0;">
@@ -134,8 +134,6 @@ export async function notifyAreaSupervisor(
   areaSupervisor: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
   await sendNotification({
@@ -149,8 +147,7 @@ export async function notifyAreaSupervisor(
 部門：${department}
 施工區域：${workArea}
 
-請點擊下方按鈕進行審核。`,
-    link,
+請到網頁內進行審核。`,
     applicationId,
     emailType: "area_supervisor_new",
   });
@@ -167,8 +164,6 @@ export async function notifyEHSManager(
   workArea: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
   await sendNotification({
@@ -182,8 +177,7 @@ export async function notifyEHSManager(
 部門：${department}
 施工區域：${workArea}
 
-請點擊下方按鈕進行審核。`,
-    link,
+請到網頁內進行審核。`,
     applicationId,
     emailType: "ehs_new",
   });
@@ -200,8 +194,6 @@ export async function notifyDepartmentManager(
   workArea: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
   await sendNotification({
@@ -215,8 +207,7 @@ export async function notifyDepartmentManager(
 部門：${department}
 施工區域：${workArea}
 
-請點擊下方按鈕進行審核。`,
-    link,
+請到網頁內進行審核。`,
     applicationId,
     emailType: "department_manager_new",
   });
@@ -231,8 +222,6 @@ export async function notifyApplicantProgress(
   stage: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
   await sendNotification({
@@ -244,8 +233,7 @@ export async function notifyApplicantProgress(
 
 目前階段：${stage}
 
-請點擊下方按鈕查看詳細資訊。`,
-    link,
+請到網頁內查看詳細資訊。`,
     applicationId,
     emailType: "applicant_progress",
   });
@@ -261,9 +249,6 @@ export async function notifyApplicant(
   comment?: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
-
   const statusText = status === "approved" ? "已通過" : "已拒絕";
   const commentText = comment ? `\n\n審核意見：\n${comment}` : "";
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
@@ -275,8 +260,7 @@ export async function notifyApplicant(
 
 您的施工安全作業許可申請審核結果：${statusText}${workOrderInfo}${commentText}
 
-請點擊下方按鈕查看詳細資訊。`,
-    link,
+請到網頁內查看詳細資訊。`,
     applicationId,
     emailType: status === "approved" ? "applicant_approved" : "applicant_rejected",
   });
@@ -294,8 +278,6 @@ export async function notifyEHSManagerRejection(
   rejectionComment?: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
   const commentInfo = rejectionComment ? `\n\n拒絕原因：${rejectionComment}` : "";
 
@@ -310,8 +292,7 @@ export async function notifyEHSManagerRejection(
 部門：${department}
 施工區域：${workArea}${commentInfo}
 
-請點擊下方按鈕查看詳情。`,
-    link,
+請到網頁內查看詳情。`,
     applicationId,
     emailType: "ehs_rejection",
   });
@@ -328,8 +309,6 @@ export async function notifyEHSManagerApproval(
   workArea: string,
   workOrderNumber?: string
 ): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const link = `${baseUrl}/applications/${applicationId}`;
   const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
 
   await sendNotification({
@@ -343,8 +322,7 @@ export async function notifyEHSManagerApproval(
 部門：${department}
 施工區域：${workArea}
 
-請點擊下方按鈕查看詳情。`,
-    link,
+請到網頁內查看詳情。`,
     applicationId,
     emailType: "ehs_approval",
   });
