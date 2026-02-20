@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ehsApprovalRequestSchema, approvalRequestSchema } from "@/lib/validation";
-import { notifyDepartmentManager, notifyApplicant, notifyEHSManagerRejection, notifyEHSManagerApproval, notifyEHSManager } from "@/lib/notifications";
+import { notifyDepartmentManager, notifyApplicant, notifyApplicantProgress, notifyEHSManagerRejection, notifyEHSManagerApproval, notifyEHSManager } from "@/lib/notifications";
 import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail } from "@/lib/config";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 
@@ -37,7 +37,7 @@ export async function POST(
       // EHS Manager 審核：拒絕時必須填寫附註說明
       validationResult = ehsApprovalRequestSchema.safeParse(body);
     } else {
-      // 作業區域主管或部門主管審核：使用一般驗證
+      // 作業區域主管或營運經理審核：使用一般驗證
       validationResult = approvalRequestSchema.safeParse(body);
     }
 
@@ -87,36 +87,22 @@ export async function POST(
         );
       }
     } else if (application.status === "pending_manager") {
-      // 應該由部門主管審核
-      if (isAreaSupervisor || isEHSManager) {
-        // 優先使用配置中的部門主管 Email，如果沒有則使用資料庫中保存的值
-        const deptManagerEmail = getDepartmentManagerEmail(application.department) || 
-                                 application.departmentManagerEmail;
-        if (deptManagerEmail) {
-          return NextResponse.json(
-            { error: `此申請目前等待部門主管審核。請使用部門主管的 Email：${deptManagerEmail}` },
-            { status: 403 }
-          );
-        } else {
-          return NextResponse.json(
-            { error: "此申請目前等待部門主管審核，但找不到部門主管的 Email 配置" },
-            { status: 403 }
-          );
-        }
-      }
-      
-      // 驗證部門主管 Email
+      // 應該由營運經理審核
+      // 優先使用配置中的營運經理 Email，如果沒有則使用資料庫中保存的值
       const deptManagerEmail = getDepartmentManagerEmail(application.department) || 
                                application.departmentManagerEmail;
+      
       if (!deptManagerEmail) {
         return NextResponse.json(
-          { error: "找不到該部門的主管 Email 配置" },
+          { error: "找不到該部門的營運經理 Email 配置" },
           { status: 500 }
         );
       }
+      
+      // ✅ 驗證提交的 Email 是否為營運經理（不再檢查是否為 EHS Manager）
       if (body.approverEmail !== deptManagerEmail) {
         return NextResponse.json(
-          { error: `無權限審核此申請。此申請的部門主管 Email 應為：${deptManagerEmail}` },
+          { error: `無權限審核此申請。此申請的營運經理 Email 應為：${deptManagerEmail}` },
           { status: 403 }
         );
       }
@@ -128,9 +114,18 @@ export async function POST(
       );
     }
 
-    // 記錄審核記錄
-    const approverType = isAreaSupervisor ? "area_supervisor" : 
-                         isEHSManager ? "ehs_manager" : "department_manager";
+    // 記錄審核記錄（department_manager 實際代表營運經理）
+    // 根據當前申請狀態判斷審核人類型，而不是根據 Email
+    let approverType: string;
+    if (application.status === "pending_area_supervisor") {
+      approverType = "area_supervisor";
+    } else if (application.status === "pending_ehs") {
+      approverType = "ehs_manager";
+    } else if (application.status === "pending_manager") {
+      approverType = "department_manager";
+    } else {
+      approverType = "unknown";
+    }
     
     const approvalLog = await prisma.approvalLog.create({
       data: {
@@ -142,14 +137,16 @@ export async function POST(
       },
     });
 
-    // 更新申請狀態
+    // 更新申請狀態（根據審核人類型，而不是 Email）
     let newStatus: string;
     if (data.action === "reject") {
       newStatus = "rejected";
-    } else if (isAreaSupervisor) {
+    } else if (approverType === "area_supervisor") {
       newStatus = "pending_ehs";
-    } else if (isEHSManager) {
+    } else if (approverType === "ehs_manager") {
       newStatus = "pending_manager";
+    } else if (approverType === "department_manager") {
+      newStatus = "approved";
     } else {
       newStatus = "approved";
     }
@@ -179,9 +176,9 @@ export async function POST(
     // 3. 作業區域主管拒絕 → 通知申請人
     // 4. 作業區域主管通過 → 通知 EHS Manager
     // 5. EHS Manager 拒絕 → 通知申請人
-    // 6. EHS Manager 通過 → 通知部門主管
-    // 7. 部門主管拒絕 → 通知 EHS Manager + 申請人
-    // 8. 部門主管通過 → 通知 EHS Manager + 申請人（完成審查）
+    // 6. EHS Manager 通過 → 通知營運經理
+    // 7. 營運經理拒絕 → 通知 EHS Manager + 申請人
+    // 8. 營運經理通過 → 通知申請人（完成審查）
     
     if (data.action === "reject") {
       if (isAreaSupervisor) {
@@ -207,7 +204,7 @@ export async function POST(
           );
         }
       } else {
-        // 部門主管拒絕：通知 EHS Manager + 申請人
+        // 營運經理拒絕：通知 EHS Manager + 申請人
         const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
         if (ehsManagerEmail) {
           await notifyEHSManagerRejection(
@@ -230,8 +227,8 @@ export async function POST(
           );
         }
       }
-    } else if (isAreaSupervisor) {
-      // 作業區域主管通過：通知 EHS Manager
+    } else if (approverType === "area_supervisor") {
+      // 作業區域主管通過（動火作業）：通知 EHS Manager + 通知申請人進度更新
       const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
       if (ehsManagerEmail) {
         await notifyEHSManager(
@@ -243,8 +240,17 @@ export async function POST(
           workOrderNumber
         );
       }
-    } else if (isEHSManager) {
-      // EHS Manager 通過：通知部門主管
+      // 同時通知申請人：作業區域主管已審核通過，進入 EHS Manager 審核
+      if (application.applicantEmail) {
+        await notifyApplicantProgress(
+          application.applicantEmail,
+          params.id,
+          "作業區域主管已審核通過，正在等待 EHS Manager 審核",
+          workOrderNumber
+        );
+      }
+    } else if (approverType === "ehs_manager") {
+      // EHS Manager 通過：通知營運經理 + 通知申請人進度更新
       const deptManagerEmail = application.departmentManagerEmail || 
                                getDepartmentManagerEmail(application.department);
       if (deptManagerEmail) {
@@ -257,8 +263,17 @@ export async function POST(
           workOrderNumber
         );
       }
+      // 同時通知申請人：EHS 審核已通過，進入營運經理審核
+      if (application.applicantEmail) {
+        await notifyApplicantProgress(
+          application.applicantEmail,
+          params.id,
+          "EHS Manager 已審核通過，正在等待營運經理最終審核",
+          workOrderNumber
+        );
+      }
     } else {
-      // 部門主管通過：完成審查，通知 EHS Manager + 申請人
+      // 營運經理通過：完成審查，通知 EHS Manager + 申請人
       const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
       if (ehsManagerEmail) {
         await notifyEHSManagerApproval(

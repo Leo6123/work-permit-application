@@ -45,6 +45,7 @@ export default function NewApplicationPage() {
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
       applicantName: "",
+      applicantEmail: "cti912@hotmail.com",
       department: "",
       workTimeStart: defaultStartTime,
       workTimeEnd: defaultEndTime,

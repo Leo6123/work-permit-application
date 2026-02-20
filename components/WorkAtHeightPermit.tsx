@@ -1,6 +1,5 @@
 "use client";
 
-import { Printer } from "lucide-react";
 import type { ApplicationWithLogs } from "@/types/application";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 
@@ -9,10 +8,6 @@ interface WorkAtHeightPermitProps {
 }
 
 export default function WorkAtHeightPermit({ application }: WorkAtHeightPermitProps) {
-  const handlePrint = () => {
-    window.print();
-  };
-
   const formatDate = (date: string | Date) => {
     const d = new Date(date);
     return {
@@ -38,16 +33,6 @@ export default function WorkAtHeightPermit({ application }: WorkAtHeightPermitPr
 
   return (
     <div id="work-at-height-permit" className="bg-white text-black">
-      {/* 列印按鈕 */}
-      <div className="print:hidden mb-4 flex justify-end">
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
-        >
-          <Printer className="w-4 h-4" />
-          此頁列印表單 (3頁)
-        </button>
-      </div>
 
       {/* ========== 第1頁：許可申請 ========== */}
       <div className="permit-page bg-white" style={{ pageBreakAfter: 'always' }}>

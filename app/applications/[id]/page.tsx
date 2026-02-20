@@ -103,6 +103,7 @@ export default function ApplicationDetailPage() {
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -187,7 +188,7 @@ export default function ApplicationDetailPage() {
     const statusMap: Record<string, { label: string; color: string; bgColor: string; borderColor: string; icon: typeof CheckCircle }> = {
       pending_area_supervisor: { label: "待作業區域主管審核", color: "text-purple-400", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/30", icon: Clock },
       pending_ehs: { label: "待 EHS 審核", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30", icon: Clock },
-      pending_manager: { label: "待主管審核", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30", icon: Clock },
+      pending_manager: { label: "待營運經理審核", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30", icon: Clock },
       approved: { label: "已通過", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30", icon: CheckCircle },
       rejected: { label: "已拒絕", color: "text-red-400", bgColor: "bg-red-500/10", borderColor: "border-red-500/30", icon: XCircle },
     };
@@ -395,7 +396,7 @@ export default function ApplicationDetailPage() {
                     <div>
                       <div style="font-weight: bold; color: #333; margin-bottom: 5px;">
                         ${log.approverType === "area_supervisor" ? "作業區域主管" : 
-                          log.approverType === "ehs_manager" ? "EHS Manager" : "營運主管"}
+                          log.approverType === "ehs_manager" ? "EHS Manager" : "營運經理"}
                       </div>
                       <div style="font-size: 12px; color: #666; font-family: monospace;">${log.approverEmail}</div>
                       <div style="margin-top: 5px;">
@@ -691,22 +692,22 @@ export default function ApplicationDetailPage() {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-4 border-b border-slate-700 pb-2">審核記錄</h3>
                     <div className="space-y-4">
-                      {[...application.approvalLogs].sort((a, b) => {
-                        // 定義排序優先級：作業區域主管 > EHS Manager > 營運主管
-                        const getPriority = (type: string) => {
-                          if (type === "area_supervisor") return 1;
-                          if (type === "ehs_manager") return 2;
-                          if (type === "department_manager") return 3;
-                          return 4;
-                        };
-                        return getPriority(a.approverType) - getPriority(b.approverType);
-                      }).map((log) => (
-                        <div key={log.id} className="border-l-4 border-cyan-500 pl-4 py-2">
-                          <div className="text-slate-300">
-                            <div className="font-medium">
-                              {log.approverType === "area_supervisor" ? "作業區域主管" : 
-                               log.approverType === "ehs_manager" ? "EHS Manager" : "營運主管"}
-                            </div>
+              {[...application.approvalLogs].sort((a, b) => {
+                // 定義排序優先級：作業區域主管 > EHS Manager > 營運經理
+                const getPriority = (type: string) => {
+                  if (type === "area_supervisor") return 1;
+                  if (type === "ehs_manager") return 2;
+                  if (type === "department_manager") return 3;
+                  return 4;
+                };
+                return getPriority(a.approverType) - getPriority(b.approverType);
+              }).map((log) => (
+                <div key={log.id} className="border-l-4 border-cyan-500 pl-4 py-2">
+                  <div className="text-slate-300">
+                    <div className="font-medium">
+                      {log.approverType === "area_supervisor" ? "作業區域主管" : 
+                       log.approverType === "ehs_manager" ? "EHS Manager" : "營運經理"}
+                    </div>
                             <div className="text-sm text-slate-500">{log.approverEmail}</div>
                             <div className="mt-1">
                               <span className={`px-2 py-1 rounded text-xs ${
@@ -801,7 +802,7 @@ export default function ApplicationDetailPage() {
 
             <div className="text-slate-600 text-2xl">→</div>
 
-            {/* 營運主管審核 */}
+            {/* 營運經理審核 */}
             <div className={`flex-1 p-4 rounded-lg border ${
               application.status === "pending_manager" 
                 ? "bg-amber-500/10 border-amber-500/30" 
@@ -811,7 +812,7 @@ export default function ApplicationDetailPage() {
                     ? "bg-red-500/10 border-red-500/30"
                     : "bg-slate-800/50 border-slate-700"
             }`}>
-              <div className="font-medium text-white">營運主管審核</div>
+              <div className="font-medium text-white">營運經理審核</div>
               <div className={`text-sm mt-1 ${
                 application.status === "pending_manager" 
                   ? "text-amber-400" 
@@ -1003,7 +1004,7 @@ export default function ApplicationDetailPage() {
             </h3>
             <div className="space-y-4">
               {[...application.approvalLogs].sort((a, b) => {
-                // 定義排序優先級：作業區域主管 > EHS Manager > 營運主管
+                // 定義排序優先級：作業區域主管 > EHS Manager > 營運經理
                 const getPriority = (type: string) => {
                   if (type === "area_supervisor") return 1;
                   if (type === "ehs_manager") return 2;
@@ -1019,7 +1020,7 @@ export default function ApplicationDetailPage() {
                     <div>
                       <div className="font-medium text-white">
                         {log.approverType === "area_supervisor" ? "作業區域主管" : 
-                         log.approverType === "ehs_manager" ? "EHS Manager" : "營運主管"}
+                         log.approverType === "ehs_manager" ? "EHS Manager" : "營運經理"}
                       </div>
                       <div className="text-sm text-slate-500 font-mono">{log.approverEmail}</div>
                       <div className="mt-1">
@@ -1045,137 +1046,12 @@ export default function ApplicationDetailPage() {
           </div>
         )}
 
-        {/* 共同作業擔任指揮、監督及協調之負責人員 */}
-        <div className="border-t border-slate-800 pt-6" id="joint-operations-form">
-          <div className="flex items-center justify-end mb-4">
-            <button
-              onClick={() => {
-                const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                  const formContent = document.getElementById('joint-operations-form-content')?.innerHTML || '';
-                  printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                      <head>
-                        <title>共同作業擔任指揮、監督及協調之負責人員</title>
-                        <style>
-                          body { font-family: Arial, sans-serif; padding: 20px; }
-                          table { width: 100%; border-collapse: collapse; font-size: 12px; }
-                          th, td { border: 1px solid #000; padding: 4px; }
-                          th { background-color: #f0f0f0; }
-                          .signature-area { margin-bottom: 16px; }
-                          .signature-line { border-bottom: 1px solid #000; display: inline-block; min-width: 200px; }
-                        </style>
-                      </head>
-                      <body>
-                        ${formContent}
-                      </body>
-                    </html>
-                  `);
-                  printWindow.document.close();
-                  printWindow.print();
-                }
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
-            >
-              <Printer className="w-4 h-4" />
-              此頁列印表單
-            </button>
-          </div>
-          <div id="joint-operations-form-content" className="bg-white text-black p-4 rounded border-2 border-slate-300 shadow-lg">
-            {/* 標題 */}
-            <h2 className="text-xl font-bold text-center mb-4">共同作業擔任指揮、監督及協調之負責人員</h2>
-
-            {/* 簽名區域 */}
-            <div className="space-y-3 mb-4 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-48">廠內承攬作業負責人(監工)簽名:</span>
-                <div className="border-b border-black flex-1"></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-32">承攬商名稱:</span>
-                  <div className="border-b border-black flex-1">{application.contractorInfo.name}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-40">承攬商施工現場負責人簽名:</span>
-                  <div className="border-b border-black flex-1">{application.contractorInfo.siteSupervisor}</div>
-                </div>
-              </div>
-              {application.personnelInfo.subcontractors && application.personnelInfo.subcontractors.length > 0 && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-32">再承攬商名稱:</span>
-                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors[0].name}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-40">再承攬商施工現場負責人簽名:</span>
-                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors[0].siteSupervisor}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 表格 */}
-            <div className="border-2 border-black">
-              <table className="w-full border-collapse text-xs">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-black p-1" colSpan={2}>入廠人員簽署<br/>(以中文正楷簽名)</th>
-                    <th className="border border-black p-1" rowSpan={2}>合格證</th>
-                    <th className="border border-black p-1" colSpan={2}>廠內承攬作業負責人(監工)確認</th>
-                  </tr>
-                  <tr className="bg-gray-100">
-                    <th className="border border-black p-1">類別</th>
-                    <th className="border border-black p-1">已接受協議組織須知、安全守則(現場危害告知及防範措施)及承攬商教育訓練</th>
-                    <th className="border border-black p-1">合格證過期或無合格證者有效保險證明 (至少三擇一), 未提供者不得入廠 (註:意外險須含意外體傷、意外死亡及失能)</th>
-                    <th className="border border-black p-1">確認者簽名</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[1, 2, 3, 4, 5, 6].map((row) => (
-                    <tr key={row}>
-                      <td className="border border-black p-1 align-top">
-                        <div className="flex gap-2">
-                          <span>☐ 承攬</span>
-                          <span>☐ 再承攬</span>
-                        </div>
-                      </td>
-                      <td className="border border-black p-1 align-top">
-                        <div className="border-b border-black mb-1 h-6"></div>
-                        <div className="text-center text-[10px]">年 <span className="border-b border-black inline-block w-12"></span> 月 <span className="border-b border-black inline-block w-12"></span> 日</div>
-                      </td>
-                      <td className="border border-black p-1 align-top">
-                        <div className="flex gap-2 flex-wrap">
-                          <span>☐ 效期內</span>
-                          <span>☐ 已過期</span>
-                          <span>☐ 無合格證</span>
-                        </div>
-                      </td>
-                      <td className="border border-black p-1 align-top">
-                        <div className="space-y-1 text-[10px]">
-                          <div>☐ 勞工職災保險+雇主補償責任險</div>
-                          <div>☐ 勞工職災保險+職災團險或意外險</div>
-                          <div>☐ 職災團險或意外險保額≥300萬元</div>
-                        </div>
-                      </td>
-                      <td className="border border-black p-1 align-top">
-                        <div className="border-b border-black h-8"></div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
         {/* 審核表單 */}
         {canApprove && (
           <div className="bg-slate-900/50 border border-cyan-500/30 p-6 rounded-lg backdrop-blur-sm">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Shield className="w-5 h-5 text-cyan-400" />
-              {isAreaSupervisorApproval ? "作業區域主管審核" : isEHSManagerApproval ? "EHS Manager 審核" : "營運主管審核"}
+              {isAreaSupervisorApproval ? "作業區域主管審核" : isEHSManagerApproval ? "EHS Manager 審核" : "營運經理審核"}
             </h3>
             <div className="space-y-4">
               <div>
@@ -1282,21 +1158,10 @@ export default function ApplicationDetailPage() {
               </div>
             )}
             {!isLoadingTemplate && pdfTemplateHtml && (
-              <>
-                <div className="print:hidden mb-4 flex justify-end">
-                  <button
-                    onClick={handlePrintPermit}
-                    className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
-                  >
-                    <Printer className="w-4 h-4" />
-                    此頁列印許可證
-                  </button>
-                </div>
-                <div 
-                  className="pdf-template-container"
-                  dangerouslySetInnerHTML={{ __html: pdfTemplateHtml }}
-                />
-              </>
+              <div 
+                className="pdf-template-container"
+                dangerouslySetInnerHTML={{ __html: pdfTemplateHtml }}
+              />
             )}
             {!isLoadingTemplate && !pdfTemplateHtml && (
               <HotWorkPermit 
@@ -1307,6 +1172,485 @@ export default function ApplicationDetailPage() {
             )}
           </div>
         )}
+
+        {/* 安全守則（現場危害告知及防範措施） */}
+        <div className="border-t border-slate-800 pt-6" id="joint-operations-form">
+          <div id="joint-operations-form-content" className="bg-white text-black p-6 rounded border-2 border-slate-300 shadow-lg">
+            <h2 className="text-xl font-bold text-center mb-2">安全守則（現場危害告知及防範措施）</h2>
+            <p className="text-center text-sm text-gray-600 mb-6">AVIENT · Page 1/2</p>
+
+            <div className="space-y-6 text-sm">
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">一、一般安全須知</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>廠區道路應與堆高機保持 1 公尺以上距離，行走於人行通道，車輛限速 10 公里/小時。</li>
+                  <li>未經許可不得觸碰機械設備或攜帶危險物品。</li>
+                  <li>飲食僅限於指定區域。</li>
+                  <li>依安全標示佩戴防護具（安全鞋、耳塞、口罩、安全帽、護目鏡、防割手套等）。</li>
+                  <li>樓梯請握扶手。</li>
+                  <li>吸菸僅限於指定吸菸區。</li>
+                  <li>發生事故立即通報；火災、地震等緊急狀況請配合疏散。</li>
+                  <li>其他未列事項依現場公告及主管指示辦理。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">二、施工安全須知</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li><strong>施工前：</strong>申請作業許可、落實人員與環境安全措施、確認資格與機具、保持通道暢通。</li>
+                  <li><strong>施工中：</strong>持續監控狀況、加強安全防護、保護地面與設備。</li>
+                  <li><strong>施工後：</strong>清理工作環境、清除廢棄物。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">三、跌倒</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>每日整理環境，避免雜物堆放。</li>
+                  <li>物料堆放整齊，不得妨礙通道。</li>
+                  <li>工作平面保持平整；無法避免之高低差應設警示或防護。</li>
+                  <li>樓梯間、地下室等陰暗處應有足夠照明。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">四、有害物</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>有機溶劑、特定化學品、粉塵作業應依相關預防規則辦理。</li>
+                  <li>佩戴適當防塵或防毒面具，並配合局部或整體換氣。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">五、墜/滾落</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>高處作業應符合勞工安全衛生相關規定。</li>
+                  <li>開口處（距地面 2 公尺以上）應設護欄或護蓋。</li>
+                  <li>無工作台之高處作業應監督佩戴安全帶、使用安全網。</li>
+                  <li>梯具應具荷重標示、FRP 材質、防滑等要求。</li>
+                  <li>酒後、體弱、懼高、情緒不穩、身體不適或經主管認定不適者，不得從事高處作業。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">六、物料掉落</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>防止高處作業導致物料掉落傷及下方人員。</li>
+                  <li>指定區域應佩戴安全帽並扣好帽扣。</li>
+                  <li>有物料掉落之虞處應設擋板、踢腳板、斜屏或安全網。</li>
+                  <li>嚴禁自高處向下拋擲物品。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">七、感電</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>電氣作業應告知相關人員並指定監護人。</li>
+                  <li>切斷電源並上鎖/掛牌後再作業。</li>
+                  <li>設備應有漏電斷路器及絕緣；自備設備應使用公司提供之漏電保護插座。</li>
+                  <li>手工具絕緣應完整；依電壓佩戴適當防護具。</li>
+                  <li>復電依公司程序辦理。</li>
+                </ol>
+              </section>
+
+              <section>
+                <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">八、吊掛</h3>
+                <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                  <li>劃設作業區，禁止人員通過吊掛物下方。</li>
+                  <li>吊鉤應有防滑舌片。</li>
+                  <li>不得超過額定荷重。</li>
+                </ol>
+              </section>
+            </div>
+
+            {/* 安全守則第二頁：列印時從新頁開始 */}
+            <div className="mt-8 pt-6 border-t border-gray-300 print:border-t-0 print:pt-0 print:mt-0" style={{ pageBreakBefore: "always" }}>
+              <h2 className="text-xl font-bold text-center mb-2 print:block">安全守則（現場危害告知及防範措施）</h2>
+              <p className="text-center text-sm text-gray-600 mb-6">AVIENT · Page 2/2</p>
+              <div className="space-y-6 text-sm">
+                <section>
+                  <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">九、火災</h3>
+                  <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                    <li>嚴禁於易燃物品堆放處使用明火。</li>
+                    <li>焊接作業附近如有易燃物應移開或鋪蓋防火毯。</li>
+                    <li>乙炔、氧氣鋼瓶應豎立固定；戶外放置須有防曬防雨措施。</li>
+                    <li>秤重區、混料區、集塵系統等粉塵區域嚴禁吸菸與未經許可之動火；電氣設備應接地；清掃防止粉塵飛揚；清除粉塵嚴禁使用氣槍，應使用集塵設備。</li>
+                  </ol>
+                </section>
+                <section>
+                  <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">十、缺氧及中毒</h3>
+                  <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                    <li>缺氧危險場所應依「缺氧症預防規則」辦理。</li>
+                    <li>作業前測定氧氣濃度，未介於 19.5%~23.5% 禁止進入。</li>
+                    <li>進入桶槽、儲槽、人孔、管道等應先通風換氣，作業中持續通風；有害物濃度低於容許濃度；指定監視人員不得離開。</li>
+                  </ol>
+                </section>
+                <section>
+                  <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">十一、溺水</h3>
+                  <p className="text-gray-800">地下室、儲水槽及廢水槽入內作業前應將積水抽乾，避免人員不慎掉落溺斃。</p>
+                </section>
+                <section>
+                  <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">十二、被夾被捲</h3>
+                  <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                    <li>原動機、轉軸、齒輪、帶輪、傳動帶等有危害之虞部分應有護罩護圍。</li>
+                    <li>動力機械具顯著危險者應於適當位置設置明顯標誌之緊急制動裝置。</li>
+                    <li>輸送帶捲入作業有被捲被夾之虞者應設置護圍。</li>
+                  </ol>
+                </section>
+                <section>
+                  <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">十三、熱危害</h3>
+                  <p className="text-gray-800">接近 40°C 以上高溫灼熱物體工作時，應穿著熱防護設備，並充分補充飲用水及鹽分。</p>
+                </section>
+                <section>
+                  <h3 className="font-bold text-base border-b border-gray-300 pb-1 mb-2">十四、道路及堆高機</h3>
+                  <ol className="list-decimal list-inside space-y-1.5 text-gray-800">
+                    <li>入廠人員及車輛應遵守廠區道路交通安全規則及交通標示、警衛管制、警示設備。</li>
+                    <li>廠區內車輛限速 10 公里/小時；卸貨及工具停放於指定區域；路口禮讓行人與車輛。</li>
+                    <li>借用廠內堆高機須持有效合格證向警衛室或管理單位借用；操作時佩戴安全帽並扣好帽扣；堆高機禁止載人或以貨叉托高人員。</li>
+                    <li>廠區全域為堆高機作業區，外部車輛入廠請保持警戒；接近堆高機時鳴喇叭並保持安全距離。</li>
+                  </ol>
+                </section>
+              </div>
+            </div>
+
+            {/* 承攬作業擔任指揮、監督及協調之負責人員（接續在安全守則之後，列印時新頁） */}
+            <div className="mt-8 pt-6 border-t-2 border-gray-400" style={{ pageBreakBefore: "always" }}>
+              <h2 className="text-xl font-bold text-center mb-4">承攬作業擔任指揮、監督及協調之負責人員</h2>
+
+              <div className="space-y-2 mb-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="whitespace-nowrap">台灣埃萬特監工簽名:</span>
+                  <div className="border-b border-black flex-1"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">承攬商公司名稱:</span>
+                    <div className="border-b border-black flex-1">{application.contractorInfo.name}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">承攬商施工現場負責人簽名:</span>
+                    <div className="border-b border-black flex-1">{application.contractorInfo.siteSupervisor}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">再承攬商1公司名稱:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors?.[0]?.name ?? ""}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">再承攬商1施工現場負責人簽名:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors?.[0]?.siteSupervisor ?? ""}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">再承攬商2公司名稱:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors?.[1]?.name ?? ""}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">再承攬商2施工現場負責人簽名:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors?.[1]?.siteSupervisor ?? ""}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">再承攬商3公司名稱:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors?.[2]?.name ?? ""}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap">再承攬商3施工現場負責人簽名:</span>
+                    <div className="border-b border-black flex-1">{application.personnelInfo.subcontractors?.[2]?.siteSupervisor ?? ""}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-2 border-black">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-1 text-center" colSpan={2}>承攬/再承攬入廠人員確認</th>
+                      <th className="border border-black p-1 text-center" colSpan={2}>台灣埃萬特監工審核</th>
+                    </tr>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-1 w-16">類別</th>
+                      <th className="border border-black p-1">本人已提供保險證明(職災保險及意外險)、接受貴司承攬商教育訓練(含協議組織須知、現場危害告知及防範措施)並熟知安全相關規範</th>
+                      <th className="border border-black p-1">
+                        <div>保險證明(職災保險及意外險)</div>
+                        <div className="font-normal text-[10px]">註1：職保屬職業工會保險需提供在職證明</div>
+                        <div className="font-normal text-[10px]">註2：意外險含意外體傷、意外死亡及失能</div>
+                      </th>
+                      <th className="border border-black p-1 w-16">簽名及日期</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[1, 2, 3, 4, 5, 6, 7].map((row) => (
+                      <tr key={row}>
+                        <td className="border border-black p-1 align-top">
+                          <div className="flex flex-col gap-1">
+                            <span>☐ 承攬</span>
+                            <span>☐ 再承攬</span>
+                          </div>
+                        </td>
+                        <td className="border border-black p-1 align-top">
+                          <div className="text-[10px] mb-1">簽名及日期：</div>
+                          <div className="border-b border-black h-5 mb-1"></div>
+                          <div className="text-center text-[10px]">年 <span className="border-b border-black inline-block w-8"></span> 月 <span className="border-b border-black inline-block w-8"></span> 日</div>
+                        </td>
+                        <td className="border border-black p-1 align-top">
+                          <div className="space-y-1 text-[10px]">
+                            <div>☐ 以承攬/再承攬公司名稱投保職災保險(職業工會保險需提供在職證明)</div>
+                            <div>☐ 以承攬/再承攬公司名稱投保金額300萬元</div>
+                            <div>☐ 以上之意外險(保單內容要有人員名單)</div>
+                          </div>
+                          <div className="text-[10px] mt-1">簽名及日期：</div>
+                          <div className="border-b border-black h-5 mb-1"></div>
+                          <div className="text-center text-[10px]">年 <span className="border-b border-black inline-block w-8"></span> 月 <span className="border-b border-black inline-block w-8"></span> 日</div>
+                        </td>
+                        <td className="border border-black p-1 align-middle"></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-2 text-xs">
+                <span className="font-bold">注意事項：</span>
+                施工期間應將施工許可申請表、本表單、機械設備器具檢查表、危險性許可作業申請表(動火、高處、局限空間)放至工作現場以備查核；施工完畢後將表單交回環安備查。
+              </div>
+            </div>
+
+            {/* 機械設備器具檢查表 第1頁/共3頁（接續，列印時新頁） */}
+            <div className="mt-8 pt-6 border-t-2 border-gray-400" style={{ pageBreakBefore: "always" }}>
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-mono">7.0.T.F02</span>
+                <span className="text-xs">第1頁/共3頁</span>
+              </div>
+              <h2 className="text-xl font-bold text-center mb-4">機械設備器具檢查表</h2>
+              <div className="space-y-2 mb-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="whitespace-nowrap">檢查人員:</span>
+                  <div className="border-b border-black flex-1 max-w-xs"></div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="whitespace-nowrap">檢查日期:</span>
+                  <span className="border-b border-black inline-block w-12 text-center"></span> 年
+                  <span className="border-b border-black inline-block w-10 text-center mx-1"></span> 月
+                  <span className="border-b border-black inline-block w-10 text-center mx-1"></span> 日
+                </div>
+              </div>
+              <div className="text-sm mb-4 text-gray-700">
+                <span className="font-bold">檢查方式：</span>
+                1.攜入前由工程部檢查並核發檢查合格證(有效期限6個月)供張貼；2.入廠後由工廠不定時檢查是否張貼檢查合格證。
+              </div>
+              <div className="border-2 border-black">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-2 w-32">機具名稱</th>
+                      <th className="border border-black p-2">檢查結果</th>
+                      <th className="border border-black p-2 w-24">備註</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((row) => (
+                      <tr key={row}>
+                        <td className="border border-black p-1 align-top"></td>
+                        <td className="border border-black p-1 align-top">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span>☐ 正常</span>
+                            <span>☐ 異常，異常狀況說明：</span>
+                            <div className="border-b border-black flex-1 min-w-[120px] inline-block"></div>
+                          </div>
+                        </td>
+                        <td className="border border-black p-1 align-top"></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 機械設備器具檢查表 第2頁/共3頁（判定標準） */}
+            <div className="mt-8 pt-6 border-t-2 border-gray-400" style={{ pageBreakBefore: "always" }}>
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-mono">7.0.T.F02</span>
+                <span className="text-xs">第2頁/共3頁</span>
+              </div>
+              <h2 className="text-xl font-bold text-center mb-4">機械設備器具檢查表</h2>
+              <div className="border-2 border-black text-xs">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-2 w-40">機具名稱</th>
+                      <th className="border border-black p-2">判定標準</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-800">
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">動力堆高機</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-2">
+                          <div><strong>一、制動裝置、離合器及方向裝置：</strong>(1)堆高機應於左右兩側設有方向指示器。(2)堆高機應設有警報裝置。</div>
+                          <div><strong>二、積載裝置及液壓裝置：</strong>(1)堆高機之液壓系統應設有防止液壓過大之安全閥。(2)貨叉應以鋼料製成且無顯著之損傷、變形及腐蝕。</div>
+                          <div><strong>三、頂蓬及桅桿：</strong>(1)堆高機應依規定設有頂蓬。(2)堆高機應設有靠背。但堆高機於桅桿後傾時無貨物掉落危害之虞而明確指定使用場所者，不在此限。(3)升降式駕駛座堆高機，駕駛座應設有防止墜落之扶手等。(4)坐式堆高機駕駛座應使用能緩和駕駛員身體振動之襯墊。(5)平衡重式及側載式堆高機駕駛座應設有安全帶、護欄等防止翻倒時駕駛員被堆高機壓傷之裝置。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">移動式起重機</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、伸臂、旋轉裝置(含螺栓、螺帽等)、外伸撐座、動力傳動裝置及其他結構部分應無損傷。</div>
+                          <div>二、過捲預防裝置、警報裝置、制動裝置、離合器及其他安全裝置應無異常。</div>
+                          <div>三、鋼索、吊鏈、吊具等應無損傷。</div>
+                          <div>四、配線、集電裝置、配電盤、開關及其他電氣、機械組件應無異常。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">金屬/塑膠等加工用之圓盤鋸</td>
+                      <td className="border border-black p-2 align-top">應設有鋸片接觸預防裝置。</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">合梯</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、應具有堅固之構造。</div>
+                          <div>二、其材質應無顯著之損傷、腐蝕等。</div>
+                          <div>三、兩梯腳與地面之夾角應在七十五度以內，且兩梯腳間應有堅固之金屬硬質繫材，底部應有防滑絕緣腳座套。</div>
+                          <div>四、應有堅固之防滑梯面。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">移動梯</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、應具有堅固之構造。</div>
+                          <div>二、其材質應無顯著之損傷、腐蝕等。</div>
+                          <div>三、寬度應在三十公分以上。</div>
+                          <div>四、應採取防止滑動或其他意外移動之必要措施。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">移動電線之攜帶型電燈</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、燈座之帶電部分應有防止手指意外觸及之構造。</div>
+                          <div>二、應使用不易變形或損壞之材料。</div>
+                          <div>三、於導電性機械設備內部檢查用攜帶型電燈，使用電壓應不超過二十四伏特，且電線應具耐磨損及良好絕緣，並不得有接頭。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">吊籠</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、過捲預防裝置、制動裝置、控制裝置及其他安全裝置應無異常。</div>
+                          <div>二、吊臂、伸臂及工作台應無損傷。</div>
+                          <div>三、升降裝置、配線及配電盤應無異常。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">電焊機</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、操作使用之焊接把手應具有充分之絕緣及耐熱性能。</div>
+                          <div>二、於導電性機械設備內之局限空間或鋼架等有觸及高導電性接地物之虞場所使用交流電焊機時，應設自動電擊防止裝置。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">鑽孔機、截角機</td>
+                      <td className="border border-black p-2 align-top">應明確告知勞工不得佩戴手套，並確實遵守。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 機械設備器具檢查表 第3頁/共3頁（判定標準） */}
+            <div className="mt-8 pt-6 border-t-2 border-gray-400" style={{ pageBreakBefore: "always" }}>
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-mono">7.0.T.F02</span>
+                <span className="text-xs">第3頁/共3頁</span>
+              </div>
+              <h2 className="text-xl font-bold text-center mb-4">機械設備器具檢查表</h2>
+              <div className="border-2 border-black text-xs">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-2 w-48">機具名稱</th>
+                      <th className="border border-black p-2">判定標準</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-800">
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">捲揚機</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、安裝前須核對並確認設計資料及強度計算書。</div>
+                          <div>二、吊掛之重量不得超過該設備所能承受之最高負荷，並應設有防止超過負荷裝置。但設置有困難者，得以標示代替之。</div>
+                          <div>三、不得供人員搭乘、吊升或降落。但臨時或緊急處理作業經採取足以防止人員墜落，且採專人監督等安全措施者，不在此限。</div>
+                          <div>四、吊鉤或吊具應有防止吊舉中所吊物體脫落之裝置。</div>
+                          <div>五、錨錠及吊掛用之吊鏈、鋼索、掛鉤、纖維索等吊具有異狀時應即修換。</div>
+                          <div>六、吊運作業中應嚴禁人員進入吊掛物下方及吊鏈、鋼索等內側角。</div>
+                          <div>七、捲揚吊索通路有與人員碰觸之虞之場所，應加防護或有其他安全設施。</div>
+                          <div>八、操作處應有適當防護設施，以防物體飛落傷害操作人員，採坐姿操作者應設坐位。</div>
+                          <div>九、應設有防止過捲裝置，設置有困難者，得以標示代替之。</div>
+                          <div>十、吊運作業時，應設置信號指揮聯絡人員，並規定統一之指揮信號。</div>
+                          <div>十一、應避免鄰近電力線作業。</div>
+                          <div>十二、電源開關箱之設置，應有防護裝置。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">高空工作車</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、壓縮壓力、閥間隙及其他原動機有無異常。</div>
+                          <div>二、離合器、變速箱、差速齒輪、傳動軸及其他動力傳動裝置有無異常。</div>
+                          <div>三、主動輪、從動輪、上下轉輪、履帶、輪胎、車輪軸承及其他走行裝置有無異常。</div>
+                          <div>四、轉向器之左右回轉角度、肘節、軸、臂及其他操作裝置有無異常。</div>
+                          <div>五、制動能力、制動鼓、制動塊及其他制動裝置有無異常。</div>
+                          <div>六、伸臂、升降裝置、屈折裝置、平衡裝置、工作台及其他作業裝置有無異常。</div>
+                          <div>七、油壓泵、油壓馬達、汽缸、安全閥及其他油壓裝置有無異常。</div>
+                          <div>八、電壓、電流及其他電氣系統有無異常。</div>
+                          <div>九、車體、操作裝置、安全裝置、連鎖裝置、警報裝置、方向指示器、燈號裝置及儀表有無異常。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">乙炔/氧乙炔熔接裝置及氣體集合熔接裝置</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>一、就裝置之損傷、變形、腐蝕等及其性能檢查。</div>
+                          <div>二、為防止氧氣背壓過高、氧氣逆流及回火造成危險，應於每一吹管分別設置安全器，但主管及最近吹管之分岐管分別設有安全器者，不在此限。</div>
+                          <div>三、凸緣、旋塞、閥等之接合部分，應使用墊圈使接合面密接。</div>
+                          <div>四、為防止乙炔等氣體用與氧氣用導管或管線之混用，應採用專用色別區分，以資識別。</div>
+                          <div>五、乙炔熔接裝置或氧乙炔熔接裝置從事金屬之熔接、熔斷或加熱作業時，應規定其產生之乙炔壓力不得超過表壓力每平方公分一點三公斤以上。</div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-black p-2 align-top font-medium">其他安全事項</td>
+                      <td className="border border-black p-2 align-top">
+                        <div className="space-y-1">
+                          <div>為避免漏電而發生感電危害，應依下列狀況，於各該電動機具設備之連接電路上設置適合其規格，具有高敏感度、高速型，能確實動作之防止感電用漏電斷路器：</div>
+                          <div>一、使用對地電壓在一百五十伏特以上移動式或攜帶式電動機具。</div>
+                          <div>二、於含水或被其他導電度高之液體濕潤之潮濕場所、金屬板上或鋼架上等導電性良好場所使用移動式或攜帶式電動機具。</div>
+                          <div>三、於建築或工程作業使用之臨時用電設備。</div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* 局限空間許可證 */}
         {shouldShowConfinedSpacePermit && application && (

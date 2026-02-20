@@ -28,10 +28,14 @@ export default function Home() {
       setLoading(true);
       const response = await fetch("/api/applications");
       const data = await response.json();
-      setAllApplications(data);
-      setApplications(data); // 初始顯示全部
+      // 確保 data 是陣列
+      const applicationsArray = Array.isArray(data) ? data : [];
+      setAllApplications(applicationsArray);
+      setApplications(applicationsArray); // 初始顯示全部
     } catch (error) {
       console.error("Error fetching applications:", error);
+      setAllApplications([]);
+      setApplications([]);
     } finally {
       setLoading(false);
     }
@@ -72,7 +76,7 @@ export default function Home() {
     { label: "全部案件", value: totalApplications, icon: FileText, color: "text-slate-400", border: "border-slate-500/30", tabId: "all" },
     { label: "作業區域主管", value: areaSupervisorPending, icon: Activity, color: "text-purple-400", border: "border-purple-500/30", tabId: "area_supervisor" },
     { label: "EHS 待審", value: ehsPending, icon: Activity, color: "text-amber-400", border: "border-amber-500/30", tabId: "ehs" },
-    { label: "營運主管審核", value: managerPending, icon: Clock, color: "text-blue-400", border: "border-blue-500/30", tabId: "manager" },
+    { label: "營運經理審核", value: managerPending, icon: Clock, color: "text-blue-400", border: "border-blue-500/30", tabId: "manager" },
     { label: "批准施工", value: approvedApplications, icon: Shield, color: "text-emerald-400", border: "border-emerald-500/30", tabId: "approved" },
   ];
 
@@ -97,7 +101,7 @@ export default function Home() {
     const statusMap: Record<string, { label: string; icon: any; color: string; bgColor: string }> = {
       pending_area_supervisor: { label: "待作業區域主管審核", icon: Clock, color: "text-purple-400", bgColor: "bg-purple-500/10 border-purple-500/30" },
       pending_ehs: { label: "待 EHS 審核", icon: Clock, color: "text-amber-400", bgColor: "bg-amber-500/10 border-amber-500/30" },
-      pending_manager: { label: "待主管審核", icon: Activity, color: "text-blue-400", bgColor: "bg-blue-500/10 border-blue-500/30" },
+      pending_manager: { label: "待營運經理審核", icon: Activity, color: "text-blue-400", bgColor: "bg-blue-500/10 border-blue-500/30" },
       approved: { label: "已通過", icon: CheckCircle, color: "text-emerald-400", bgColor: "bg-emerald-500/10 border-emerald-500/30" },
       rejected: { label: "已拒絕", icon: XCircle, color: "text-red-400", bgColor: "bg-red-500/10 border-red-500/30" },
     };
@@ -106,6 +110,7 @@ export default function Home() {
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -116,6 +121,7 @@ export default function Home() {
 
   const formatDateShort = (date: string | Date) => {
     return new Date(date).toLocaleString("zh-TW", {
+      timeZone: "Asia/Taipei",
       month: "2-digit",
       day: "2-digit",
       hour: "2-digit",

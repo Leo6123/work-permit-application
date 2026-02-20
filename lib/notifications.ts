@@ -151,7 +151,7 @@ export async function notifyEHSManager(
 }
 
 /**
- * 通知部門主管需要審核
+ * 通知營運經理需要審核
  */
 export async function notifyDepartmentManager(
   managerEmail: string,
@@ -167,7 +167,7 @@ export async function notifyDepartmentManager(
 
   await sendNotification({
     to: managerEmail,
-    subject: "【施工安全作業許可】申請待最終審核",
+    subject: "【施工安全作業許可】申請待營運經理最終審核",
     body: `您好，
 
 有一份施工安全作業許可申請已通過 EHS 審核，需要您進行最終審核：${workOrderInfo}
@@ -177,6 +177,33 @@ export async function notifyDepartmentManager(
 施工區域：${workArea}
 
 請點擊下方按鈕進行審核。`,
+    link,
+  });
+}
+
+/**
+ * 通知申請人：申請進入下一審核階段
+ */
+export async function notifyApplicantProgress(
+  applicantEmail: string,
+  applicationId: string,
+  stage: string,
+  workOrderNumber?: string
+): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const link = `${baseUrl}/applications/${applicationId}`;
+  const workOrderInfo = workOrderNumber ? `\n工單編號：${workOrderNumber}` : "";
+
+  await sendNotification({
+    to: applicantEmail,
+    subject: "【施工安全作業許可】申請審核進度更新",
+    body: `您好，
+
+您的施工安全作業許可申請目前進度更新：${workOrderInfo}
+
+目前階段：${stage}
+
+請點擊下方按鈕查看詳細資訊。`,
     link,
   });
 }
@@ -211,7 +238,7 @@ export async function notifyApplicant(
 }
 
 /**
- * 通知 EHS Manager：部門主管拒絕申請
+ * 通知 EHS Manager：營運經理拒絕申請
  */
 export async function notifyEHSManagerRejection(
   ehsManagerEmail: string,
@@ -229,10 +256,10 @@ export async function notifyEHSManagerRejection(
 
   await sendNotification({
     to: ehsManagerEmail,
-    subject: "【施工安全作業許可】申請被部門主管拒絕",
+    subject: "【施工安全作業許可】申請被營運經理拒絕",
     body: `您好，
 
-您之前審核通過的施工安全作業許可申請已被部門主管拒絕：${workOrderInfo}
+您之前審核通過的施工安全作業許可申請已被營運經理拒絕：${workOrderInfo}
 
 申請人：${applicantName}
 部門：${department}

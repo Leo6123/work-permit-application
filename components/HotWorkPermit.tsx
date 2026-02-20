@@ -1,7 +1,5 @@
 "use client";
 
-import { Printer } from "lucide-react";
-
 interface HotWorkDetails {
   personnelType: "employee" | "contractor";
   contractorName?: string;
@@ -20,10 +18,6 @@ interface HotWorkPermitProps {
 }
 
 export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd }: HotWorkPermitProps) {
-  const handlePrint = () => {
-    window.print();
-  };
-
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleString("zh-TW", {
       year: "numeric",
@@ -36,16 +30,6 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
 
   return (
     <div id="hot-work-permit" className="bg-white text-black">
-      {/* 列印按鈕 */}
-      <div className="print:hidden mb-4 flex justify-end">
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-all active:scale-95"
-        >
-          <Printer className="w-4 h-4" />
-          此頁列印許可證 (3頁)
-        </button>
-      </div>
 
       {/* ========== 第1頁：熱加工操作許可證 ========== */}
       <div className="permit-page bg-white" style={{ pageBreakAfter: 'always' }}>

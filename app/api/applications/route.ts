@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 獲取 EHS Manager 和部門主管 Email
-    const ehsManagerEmail = data.ehsManagerEmail || process.env.EHS_MANAGER_EMAIL || "ehs.manager@company.com";
+    const ehsManagerEmail = data.ehsManagerEmail || EHS_MANAGER_EMAIL;
     const departmentManagerEmail = data.departmentManagerEmail || getDepartmentManagerEmail(data.department);
 
     // 檢查是否有動火作業
