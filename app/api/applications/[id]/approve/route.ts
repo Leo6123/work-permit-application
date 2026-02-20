@@ -2,16 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ehsApprovalRequestSchema, approvalRequestSchema } from "@/lib/validation";
 import { notifyDepartmentManager, notifyApplicant, notifyApplicantProgress, notifyEHSManagerRejection, notifyEHSManagerApproval, notifyEHSManager } from "@/lib/notifications";
-import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail } from "@/lib/config";
+import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail, canAreaSupervisorApprove, isEHSPermission, isOperationsManagerPermission } from "@/lib/config";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
+import { createClient } from "@/lib/supabase/server";
 
-// POST: 處理審核操作
+// POST: 處理審核操作（須登入，且審核人 Email 須為登入者且具該角色權限）
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user?.email) {
+      return NextResponse.json({ error: "請先登入" }, { status: 401 });
+    }
+
     const body = await request.json();
+    if (body.approverEmail?.trim().toLowerCase() !== user.email.trim().toLowerCase()) {
+      return NextResponse.json(
+        { error: "審核人 Email 必須與登入帳號一致" },
+        { status: 403 }
+      );
+    }
 
     // 查詢申請記錄
     const application = await prisma.workPermitApplication.findUnique({
@@ -25,11 +39,9 @@ export async function POST(
       );
     }
 
-    // 判斷審核人員類型
-    const isAreaSupervisor = application.areaSupervisorEmail && 
-                              body.approverEmail === application.areaSupervisorEmail;
-    const isEHSManager = body.approverEmail === application.ehsManagerEmail ||
-                         body.approverEmail === EHS_MANAGER_EMAIL;
+    // 依「權限」判斷審核人員類型（與 Resend 通知用信箱分開）
+    const isAreaSupervisor = canAreaSupervisorApprove(body.approverEmail, application.areaSupervisorEmail);
+    const isEHSManager = isEHSPermission(body.approverEmail);
 
     // 根據審核人員類型選擇驗證 schema
     let validationResult;
@@ -87,22 +99,10 @@ export async function POST(
         );
       }
     } else if (application.status === "pending_manager") {
-      // 應該由營運經理審核
-      // 優先使用配置中的營運經理 Email，如果沒有則使用資料庫中保存的值
-      const deptManagerEmail = getDepartmentManagerEmail(application.department) || 
-                               application.departmentManagerEmail;
-      
-      if (!deptManagerEmail) {
+      // 應該由營運經理審核（權限列表：OPERATIONS_MANAGER_PERMISSION_EMAILS 或預設）
+      if (!isOperationsManagerPermission(body.approverEmail)) {
         return NextResponse.json(
-          { error: "找不到該部門的營運經理 Email 配置" },
-          { status: 500 }
-        );
-      }
-      
-      // ✅ 驗證提交的 Email 是否為營運經理（不再檢查是否為 EHS Manager）
-      if (body.approverEmail !== deptManagerEmail) {
-        return NextResponse.json(
-          { error: `無權限審核此申請。此申請的營運經理 Email 應為：${deptManagerEmail}` },
+          { error: "無權限。僅具營運經理權限的帳號可審核此階段。" },
           { status: 403 }
         );
       }
@@ -251,6 +251,7 @@ export async function POST(
       }
     } else if (approverType === "ehs_manager") {
       // EHS Manager 通過：通知營運經理 + 通知申請人進度更新
+      console.log("[approve] EHS Manager 通過，準備發送通知：營運經理 + 申請人進度");
       const deptManagerEmail = application.departmentManagerEmail || 
                                getDepartmentManagerEmail(application.department);
       if (deptManagerEmail) {

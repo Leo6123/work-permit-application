@@ -12,6 +12,14 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [canSubmitApplication, setCanSubmitApplication] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data) => setCanSubmitApplication(!!data.roles?.canSubmitApplication))
+      .catch(() => setCanSubmitApplication(false));
+  }, []);
 
   // 載入完整的申請列表（用於統計）
   useEffect(() => {
@@ -185,18 +193,20 @@ export default function Home() {
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
             <span className="text-xs font-mono text-slate-400">SYSTEM ONLINE</span>
           </div>
-          <Link
-            href="/applications/new"
-            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded shadow-[0_0_15px_rgba(8,145,178,0.4)] transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="font-medium">新增申請</span>
-          </Link>
+          {canSubmitApplication && (
+            <Link
+              href="/applications/new"
+              className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded shadow-[0_0_15px_rgba(8,145,178,0.4)] transition-all active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="font-medium">新增申請</span>
+            </Link>
+          )}
         </div>
       </nav>
 
       <main className="relative max-w-7xl mx-auto p-6 z-10 space-y-8">
-        {/* 儀表板數據卡 (HUD Style) */}
+        {/* 儀表板數據卡：所有人皆可看到點選菜單與列表，僅審核依權限；下方「新增申請」僅申請人/管理者可見 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {stats.map((stat, idx) => (
             <button

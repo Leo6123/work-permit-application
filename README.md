@@ -97,6 +97,15 @@ DEPARTMENT_MANAGERS="維修部:manager.maintenance@company.com,生產部:manager
 
 **注意**：本地開發時可以使用 SQLite（`DATABASE_URL="file:./dev.db"`），但部署到 Vercel 時必須使用 Supabase PostgreSQL。
 
+### 登入權限（Supabase Auth）
+
+需登入後才能使用首頁、申請列表、新增申請與審核。未設定 Auth 時（未填 `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`）則不強制登入。
+
+- **環境變數**：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`（見 `.env.example`）
+- **取得方式**：Supabase Dashboard → Settings → API → Project URL / anon public key
+- **建立使用者**：Supabase Dashboard → Authentication → Users → Add user（Email + 密碼）
+- **路徑**：`/login` 為登入頁；登入後頂列顯示信箱與「登出」
+
 ## 部署到 Vercel
 
 ### 前置準備
@@ -119,6 +128,7 @@ DEPARTMENT_MANAGERS="維修部:manager.maintenance@company.com,生產部:manager
 2. **設定環境變數**
    在 Vercel Dashboard 的專案設定中，添加以下環境變數：
    - `DATABASE_URL` - Supabase PostgreSQL 連接字串（包含 `pgbouncer=true&connection_limit=1`）
+   - `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY` - 登入權限用（Supabase → Settings → API）
    - `NEXT_PUBLIC_BASE_URL` - Vercel 會自動設定，或手動設定為您的 Vercel URL
    - `EHS_MANAGER_EMAIL` - EHS Manager 的 Email
    - `DEPARTMENT_MANAGERS` - 部門主管 Email 配置

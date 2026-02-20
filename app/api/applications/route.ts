@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applicationFormSchema } from "@/lib/validation";
 import { notifyEHSManager, notifyAreaSupervisor } from "@/lib/notifications";
-import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail, getAreaSupervisorEmail } from "@/lib/config";
+import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail, getAreaSupervisorEmail, canSubmitApplication, getApplicantList } from "@/lib/config";
 import { generateWorkOrderNumber, getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
+import { createClient } from "@/lib/supabase/server";
 
 // GET: 查詢申請列表
 export async function GET(request: NextRequest) {
@@ -47,9 +48,22 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: 提交申請
+// POST: 提交申請（僅申請人清單或管理者可填單）
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user?.email) {
+      return NextResponse.json({ error: "請先登入" }, { status: 401 });
+    }
+    if (!canSubmitApplication(user.email)) {
+      return NextResponse.json(
+        { error: "僅具申請人權限或管理者可提交新申請" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     // 驗證表單資料
@@ -62,6 +76,17 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validationResult.data;
+
+    // 申請人必須在允許清單內，並以清單內的 email 為準
+    const applicantList = getApplicantList();
+    const applicantMatch = applicantList.find((p) => p.name === data.applicantName);
+    if (!applicantMatch) {
+      return NextResponse.json(
+        { error: "請選擇有效的申請人（Jack Chen / Charlie Lin / David Yeh）" },
+        { status: 400 }
+      );
+    }
+    data.applicantEmail = applicantMatch.email;
 
     // 當勾選動火作業時，自動設定為「是」
     if (data.hazardFactors.hotWork) {

@@ -9,16 +9,14 @@ import Link from "next/link";
 import { Shield, ArrowLeft, AlertCircle } from "lucide-react";
 import type { ApplicationFormInput } from "@/lib/validation";
 
-const APPLICANT_OPTIONS = [
-  "Jack Chen",
-  "Charlie Lin",
-  "David Yeh",
-] as const;
+type ApplicantOption = { name: string; email: string };
 
 export default function NewApplicationPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [applicantOptions, setApplicantOptions] = useState<ApplicantOption[]>([]);
+  const [canSubmit, setCanSubmit] = useState<boolean | null>(null);
 
   // 取得今天的日期時間字串（格式：YYYY-MM-DDTHH:mm）
   const getTodayDateTimeString = (hours: number = 8, minutes: number = 0): string => {
@@ -45,7 +43,7 @@ export default function NewApplicationPage() {
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
       applicantName: "",
-      applicantEmail: "cti912@hotmail.com",
+      applicantEmail: "",
       department: "",
       workTimeStart: defaultStartTime,
       workTimeEnd: defaultEndTime,
@@ -71,8 +69,29 @@ export default function NewApplicationPage() {
   const hotWorkChecked = watch("hazardFactors.hotWork");
   const hotWorkPersonnelType = watch("hazardousOperations.hotWorkDetails.personnelType");
   const applicantNameValue = watch("applicantName");
-  const [customApplicantName, setCustomApplicantName] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data) => {
+        setCanSubmit(!!data.roles?.canSubmitApplication);
+        if (data.roles && !data.roles.canSubmitApplication) {
+          router.replace("/");
+          return;
+        }
+      })
+      .catch(() => setCanSubmit(false));
+    fetch("/api/applicants")
+      .then((r) => r.json())
+      .then((list) => setApplicantOptions(Array.isArray(list) ? list : []))
+      .catch(() => setApplicantOptions([]));
+  }, [router]);
+
+  useEffect(() => {
+    const match = applicantOptions.find((p) => p.name === applicantNameValue);
+    if (match) setValue("applicantEmail", match.email, { shouldValidate: false });
+  }, [applicantNameValue, applicantOptions, setValue]);
 
   // 更新其他作業危害因素說明的函數
   const updateOtherHazardFactors = () => {
@@ -103,7 +122,6 @@ export default function NewApplicationPage() {
     setIsMounted(true);
   }, []);
 
-  const showCustomApplicant = isMounted && applicantNameValue === "其他";
   const showHotWorkDetails = isMounted && hotWorkChecked;
   const showContractorName = showHotWorkDetails && hotWorkPersonnelType === "contractor";
 
@@ -112,17 +130,6 @@ export default function NewApplicationPage() {
     setError(null);
 
     try {
-      // 處理申請人姓名：如果是"其他"，使用自定義輸入
-      if (data.applicantName === "其他") {
-        if (customApplicantName.trim()) {
-          data.applicantName = customApplicantName.trim();
-        } else {
-          setError("請輸入申請人姓名");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
       // 當勾選動火作業時，自動設定為「是」
       if (data.hazardFactors.hotWork) {
         data.hazardousOperations.hotWork = "yes";
@@ -219,6 +226,11 @@ export default function NewApplicationPage() {
           </div>
         )}
 
+        {(canSubmit === false && (
+          <div className="bg-slate-900/50 border border-slate-700 p-6 rounded-lg text-slate-400 text-center">
+            僅具申請人權限或管理者可填單，您目前無權限。正在導回首頁…
+          </div>
+        )) || (
         <form onSubmit={handleSubmit(onSubmit)} className="bg-slate-900/50 border border-slate-800 p-6 rounded-lg backdrop-blur-sm space-y-8">
           {/* 申請人資訊 */}
           <section className="space-y-4">
@@ -232,21 +244,14 @@ export default function NewApplicationPage() {
                 </label>
                 {isMounted ? (
                   <select
-                    {...register("applicantName", {
-                      onChange: (e) => {
-                        if (e.target.value !== "其他") {
-                          setCustomApplicantName("");
-                        }
-                      },
-                    })}
+                    {...register("applicantName", { required: "請選擇申請人" })}
                     className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
                     defaultValue=""
                   >
                     <option value="">請選擇申請人</option>
-                    <option value="Jack Chen">Jack Chen</option>
-                    <option value="Charlie Lin">Charlie Lin</option>
-                    <option value="David Yeh">David Yeh</option>
-                    <option value="其他">其他(自行填入)</option>
+                    {applicantOptions.map((p) => (
+                      <option key={p.email} value={p.name}>{p.name}</option>
+                    ))}
                   </select>
                 ) : (
                   <select
@@ -256,15 +261,6 @@ export default function NewApplicationPage() {
                   >
                     <option value="">請選擇申請人</option>
                   </select>
-                )}
-                {isMounted && showCustomApplicant && (
-                  <input
-                    type="text"
-                    value={customApplicantName}
-                    onChange={(e) => setCustomApplicantName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 mt-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 placeholder-slate-600 transition-all"
-                    placeholder="請輸入申請人姓名"
-                  />
                 )}
                 {errors.applicantName && (
                   <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
@@ -831,6 +827,7 @@ export default function NewApplicationPage() {
             </button>
           </div>
         </form>
+        )}
       </main>
     </div>
   );

@@ -28,12 +28,41 @@ export default function ApplicationDetailPage() {
   const pdfContentRef = useRef<HTMLDivElement>(null);
   const [pdfTemplateHtml, setPdfTemplateHtml] = useState<string | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ email: string; roles: { ehs: boolean; areaSupervisor: boolean; operationsManager: boolean } } | null>(null);
 
   useEffect(() => {
     if (params.id) {
       fetchApplication();
     }
   }, [params.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user?.email && data.roles) {
+          setCurrentUser({ email: data.user.email, roles: data.roles });
+        } else {
+          setCurrentUser(null);
+        }
+      })
+      .catch(() => setCurrentUser(null));
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.email && application?.status?.startsWith("pending_")) {
+      const isArea = application.status === "pending_area_supervisor";
+      const isEhs = application.status === "pending_ehs";
+      const isOps = application.status === "pending_manager";
+      const can =
+        (isArea && currentUser.roles.areaSupervisor && application.areaSupervisorEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (isEhs && currentUser.roles.ehs) ||
+        (isOps && currentUser.roles.operationsManager);
+      if (can) {
+        setApprovalData((prev) => (prev.approverEmail === currentUser.email ? prev : { ...prev, approverEmail: currentUser.email }));
+      }
+    }
+  }, [currentUser?.email, application?.status, application?.areaSupervisorEmail]);
 
   const fetchApplication = async () => {
     try {
@@ -490,9 +519,18 @@ export default function ApplicationDetailPage() {
 
   const status = getStatusConfig(application.status);
   const StatusIcon = status.icon;
-  const canApprove = (application.status === "pending_area_supervisor" || application.status === "pending_ehs" || application.status === "pending_manager") && !isApproving;
   const isAreaSupervisorApproval = application.status === "pending_area_supervisor";
   const isEHSManagerApproval = application.status === "pending_ehs";
+  const isOperationsManagerApproval = application.status === "pending_manager";
+  const hasPermissionForThisStep =
+    currentUser &&
+    ((isAreaSupervisorApproval && currentUser.roles.areaSupervisor && application.areaSupervisorEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+     (isEHSManagerApproval && currentUser.roles.ehs) ||
+     (isOperationsManagerApproval && currentUser.roles.operationsManager));
+  const canApprove =
+    (application.status === "pending_area_supervisor" || application.status === "pending_ehs" || application.status === "pending_manager") &&
+    !!hasPermissionForThisStep &&
+    !isApproving;
   const requireCommentOnReject = isEHSManagerApproval && approvalData.action === "reject";
 
   return (
@@ -1046,7 +1084,12 @@ export default function ApplicationDetailPage() {
           </div>
         )}
 
-        {/* 審核表單 */}
+        {/* 審核表單（僅具該角色權限的登入者可見） */}
+        {(application.status === "pending_area_supervisor" || application.status === "pending_ehs" || application.status === "pending_manager") && !canApprove && currentUser && (
+          <div className="bg-slate-900/30 border border-slate-600 p-4 rounded-lg text-slate-400 text-sm">
+            此階段僅限對應角色審核。您目前登入為 {currentUser.email}，若需審核請使用具「{isAreaSupervisorApproval ? "作業區域主管" : isEHSManagerApproval ? "EHS" : "營運經理"}」權限的帳號。
+          </div>
+        )}
         {canApprove && (
           <div className="bg-slate-900/50 border border-cyan-500/30 p-6 rounded-lg backdrop-blur-sm">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
@@ -1056,14 +1099,14 @@ export default function ApplicationDetailPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  審核人 Email <span className="text-red-400">*</span>
+                  審核人 <span className="text-slate-500 font-normal">（以登入帳號審核）</span>
                 </label>
                 <input
                   type="email"
                   value={approvalData.approverEmail}
-                  onChange={(e) => setApprovalData({ ...approvalData, approverEmail: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-3 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder-slate-600"
-                  placeholder="輸入您的 Email"
+                  readOnly
+                  className="w-full bg-slate-800 border border-slate-600 text-slate-300 rounded px-3 py-2 cursor-not-allowed"
+                  placeholder="登入後自動帶入"
                 />
               </div>
               {isAreaSupervisorApproval && (

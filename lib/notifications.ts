@@ -4,6 +4,11 @@ import { Resend } from 'resend';
 // 初始化 Resend（如果有 API Key）
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
+// 部署時若未設定 RESEND_API_KEY，只會 console 模擬、不會真的發信
+if (!resend && process.env.NODE_ENV === 'production') {
+  console.warn('[notifications] RESEND_API_KEY 未設定 - 審核通過時不會發送真實 Email，僅記錄於日誌。請在 Vercel → Project → Settings → Environment Variables 新增 RESEND_API_KEY。');
+}
+
 // 發送者 Email（需要在 Resend 驗證的網域，或使用 onboarding@resend.dev 測試）
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const FROM_NAME = process.env.FROM_NAME || '施工安全作業許可系統';
@@ -58,14 +63,20 @@ export async function sendNotification(data: NotificationData): Promise<void> {
         text: data.body, // 純文字版本
       });
 
-      console.log(`✅ Email sent to ${data.to}:`, result);
+      if (result.error) {
+        console.error(`❌ Resend API 回傳錯誤 to ${data.to}:`, JSON.stringify(result.error));
+        logNotification(data);
+      } else {
+        console.log(`✅ Email sent to ${data.to}, id:`, (result as { data?: { id?: string } }).data?.id);
+      }
     } catch (error) {
-      console.error(`❌ Failed to send email to ${data.to}:`, error);
-      // 失敗時回退到 console.log
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errStack = error instanceof Error ? error.stack : undefined;
+      console.error(`❌ Failed to send email to ${data.to}:`, errMsg, errStack || '');
       logNotification(data);
     }
   } else {
-    // 沒有 API Key，使用 console.log 模擬
+    // 沒有 API Key，使用 console.log 模擬（Vercel 上會出現在 Function Logs）
     logNotification(data);
   }
 }
@@ -75,7 +86,7 @@ export async function sendNotification(data: NotificationData): Promise<void> {
  */
 function logNotification(data: NotificationData): void {
   console.log("\n" + "=".repeat(60));
-  console.log("📧 EMAIL NOTIFICATION (模擬)");
+  console.log("📧 EMAIL NOTIFICATION (未發送 - 請設定 Vercel 的 RESEND_API_KEY 以啟用真實發信)");
   console.log("=".repeat(60));
   console.log(`To: ${data.to}`);
   console.log(`Subject: ${data.subject}`);
