@@ -6,6 +6,7 @@ import { AuthHeader } from "@/components/AuthHeader";
 export const metadata: Metadata = {
   title: "Work Permit Application",
   description: "Work Permit Application System",
+  icons: { icon: "/icon" },
 };
 
 export default async function RootLayout({
