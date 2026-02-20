@@ -184,6 +184,7 @@ export async function POST(
       if (isAreaSupervisor) {
         // 作業區域主管拒絕：通知申請人
         if (application.applicantEmail) {
+          console.log("[approve] 拒絕－通知申請人:", application.applicantEmail);
           await notifyApplicant(
             application.applicantEmail,
             params.id,
@@ -191,10 +192,13 @@ export async function POST(
             data.comment || undefined,
             workOrderNumber
           );
+        } else {
+          console.warn("[approve] 申請人 Email 為空，跳過通知申請人（區域主管拒絕）");
         }
       } else if (isEHSManager) {
         // EHS Manager 拒絕：通知申請人
         if (application.applicantEmail) {
+          console.log("[approve] 拒絕－通知申請人:", application.applicantEmail);
           await notifyApplicant(
             application.applicantEmail,
             params.id,
@@ -202,6 +206,8 @@ export async function POST(
             data.comment || undefined,
             workOrderNumber
           );
+        } else {
+          console.warn("[approve] 申請人 Email 為空，跳過通知申請人（EHS 拒絕）");
         }
       } else {
         // 營運經理拒絕：通知 EHS Manager + 申請人
@@ -218,6 +224,7 @@ export async function POST(
           );
         }
         if (application.applicantEmail) {
+          console.log("[approve] 拒絕－通知申請人:", application.applicantEmail);
           await notifyApplicant(
             application.applicantEmail,
             params.id,
@@ -225,6 +232,8 @@ export async function POST(
             data.comment || undefined,
             workOrderNumber
           );
+        } else {
+          console.warn("[approve] 申請人 Email 為空，跳過通知申請人（營運經理拒絕）");
         }
       }
     } else if (approverType === "area_supervisor") {
@@ -242,12 +251,15 @@ export async function POST(
       }
       // 同時通知申請人：作業區域主管已審核通過，進入 EHS Manager 審核
       if (application.applicantEmail) {
+        console.log("[approve] 通知申請人（進度）:", application.applicantEmail);
         await notifyApplicantProgress(
           application.applicantEmail,
           params.id,
           "作業區域主管已審核通過，正在等待 EHS Manager 審核",
           workOrderNumber
         );
+      } else {
+        console.warn("[approve] 申請人 Email 為空，跳過通知申請人（作業區域主管通過）");
       }
     } else if (approverType === "ehs_manager") {
       // EHS Manager 通過：通知營運經理 + 通知申請人進度更新
@@ -266,12 +278,15 @@ export async function POST(
       }
       // 同時通知申請人：EHS 審核已通過，進入營運經理審核
       if (application.applicantEmail) {
+        console.log("[approve] 通知申請人（進度）:", application.applicantEmail);
         await notifyApplicantProgress(
           application.applicantEmail,
           params.id,
           "EHS Manager 已審核通過，正在等待營運經理最終審核",
           workOrderNumber
         );
+      } else {
+        console.warn("[approve] 申請人 Email 為空，跳過通知申請人（EHS 通過）");
       }
     } else {
       // 營運經理通過：完成審查，通知 EHS Manager + 申請人
@@ -287,6 +302,7 @@ export async function POST(
         );
       }
       if (application.applicantEmail) {
+        console.log("[approve] 通知申請人（審核通過）:", application.applicantEmail);
         await notifyApplicant(
           application.applicantEmail,
           params.id,
@@ -294,6 +310,8 @@ export async function POST(
           undefined,
           workOrderNumber
         );
+      } else {
+        console.warn("[approve] 申請人 Email 為空，跳過通知申請人（營運經理通過）");
       }
     }
 

@@ -1,5 +1,6 @@
 // Email 通知服務 - 使用 Resend 發送真實郵件
-import { Resend } from 'resend';
+import { Resend } from "resend";
+import { prisma } from "@/lib/prisma";
 
 // 初始化 Resend（如果有 API Key）
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -10,6 +11,7 @@ if (!resend && process.env.NODE_ENV === 'production') {
 }
 
 // 發送者 Email（需要在 Resend 驗證的網域，或使用 onboarding@resend.dev 測試）
+// 若使用 onboarding@resend.dev：Resend 免費版僅能寄給「註冊 Resend 時的信箱」，申請人若為其他信箱會收不到。需在 Resend 驗證網域後改用自訂 FROM_EMAIL 才能寄給任意收件人。
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const FROM_NAME = process.env.FROM_NAME || '施工安全作業許可系統';
 
@@ -18,6 +20,8 @@ interface NotificationData {
   subject: string;
   body: string;
   link?: string;
+  applicationId?: string;
+  emailType?: string; // 供後台紀錄：area_supervisor_new, ehs_new, department_manager_new, applicant_progress, applicant_approved, applicant_rejected, ehs_rejection, ehs_approval
 }
 
 /**
@@ -52,7 +56,9 @@ export async function sendNotification(data: NotificationData): Promise<void> {
     </div>
   `;
 
-  // 如果有 Resend API Key，發送真實郵件
+  let success = false;
+  let errorMessage: string | null = null;
+
   if (resend) {
     try {
       const result = await resend.emails.send({
@@ -60,24 +66,42 @@ export async function sendNotification(data: NotificationData): Promise<void> {
         to: data.to,
         subject: data.subject,
         html: htmlContent,
-        text: data.body, // 純文字版本
+        text: data.body,
       });
 
       if (result.error) {
-        console.error(`❌ Resend API 回傳錯誤 to ${data.to}:`, JSON.stringify(result.error));
+        errorMessage = JSON.stringify(result.error);
+        console.error(`❌ Resend API 回傳錯誤 to ${data.to}:`, errorMessage);
         logNotification(data);
       } else {
+        success = true;
         console.log(`✅ Email sent to ${data.to}, id:`, (result as { data?: { id?: string } }).data?.id);
       }
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : String(error);
-      const errStack = error instanceof Error ? error.stack : undefined;
-      console.error(`❌ Failed to send email to ${data.to}:`, errMsg, errStack || '');
+      errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`❌ Failed to send email to ${data.to}:`, errorMessage);
       logNotification(data);
     }
   } else {
-    // 沒有 API Key，使用 console.log 模擬（Vercel 上會出現在 Function Logs）
     logNotification(data);
+    errorMessage = "未設定 RESEND_API_KEY，未實際發送";
+  }
+
+  if (data.applicationId && data.emailType) {
+    try {
+      await prisma.emailLog.create({
+        data: {
+          applicationId: data.applicationId,
+          to: data.to,
+          subject: data.subject,
+          emailType: data.emailType,
+          success,
+          errorMessage,
+        },
+      });
+    } catch (e) {
+      console.error("[notifications] 寫入 EmailLog 失敗:", e);
+    }
   }
 }
 
@@ -127,6 +151,8 @@ export async function notifyAreaSupervisor(
 
 請點擊下方按鈕進行審核。`,
     link,
+    applicationId,
+    emailType: "area_supervisor_new",
   });
 }
 
@@ -158,6 +184,8 @@ export async function notifyEHSManager(
 
 請點擊下方按鈕進行審核。`,
     link,
+    applicationId,
+    emailType: "ehs_new",
   });
 }
 
@@ -189,6 +217,8 @@ export async function notifyDepartmentManager(
 
 請點擊下方按鈕進行審核。`,
     link,
+    applicationId,
+    emailType: "department_manager_new",
   });
 }
 
@@ -216,6 +246,8 @@ export async function notifyApplicantProgress(
 
 請點擊下方按鈕查看詳細資訊。`,
     link,
+    applicationId,
+    emailType: "applicant_progress",
   });
 }
 
@@ -245,6 +277,8 @@ export async function notifyApplicant(
 
 請點擊下方按鈕查看詳細資訊。`,
     link,
+    applicationId,
+    emailType: status === "approved" ? "applicant_approved" : "applicant_rejected",
   });
 }
 
@@ -278,6 +312,8 @@ export async function notifyEHSManagerRejection(
 
 請點擊下方按鈕查看詳情。`,
     link,
+    applicationId,
+    emailType: "ehs_rejection",
   });
 }
 
@@ -309,5 +345,7 @@ export async function notifyEHSManagerApproval(
 
 請點擊下方按鈕查看詳情。`,
     link,
+    applicationId,
+    emailType: "ehs_approval",
   });
 }

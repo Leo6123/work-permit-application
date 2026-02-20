@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Shield, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 
 type Props = { userEmail: string | null };
@@ -56,6 +57,15 @@ export function AuthHeader({ userEmail }: Props) {
           <span className="hidden sm:inline">權限：</span>
           <span className="text-cyan-400/90">{activeRoles.join("、")}</span>
         </span>
+      )}
+      {roles?.isAdmin && (
+        <Link
+          href="/admin"
+          className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          後台
+        </Link>
       )}
       <button
         type="button"

@@ -42,3 +42,14 @@ model ApprovalLog {
   comment       String?                // 附註說明（拒絕時必填，特別是 EHS Manager）
   approvedAt    DateTime               @default(now())
 }
+
+model EmailLog {
+  id            String   @id @default(cuid())
+  applicationId String?  // 關聯的申請 ID（若有）
+  to            String   // 收件人
+  subject       String   // 主旨
+  emailType     String   // 類型：applicant_progress, applicant_approved, applicant_rejected, ehs_new, area_supervisor_new, department_manager_new, ehs_rejection, ehs_approval
+  success       Boolean  @default(true)
+  errorMessage  String?  // 發送失敗時的錯誤訊息
+  sentAt        DateTime @default(now())
+}

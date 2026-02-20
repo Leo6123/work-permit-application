@@ -102,10 +102,6 @@ function LoginForm() {
               {loading ? "登入中..." : "登入"}
             </button>
           </form>
-
-          <p className="mt-6 text-slate-500 text-xs">
-            帳號由管理員於 Supabase Dashboard → Authentication → Users 建立。
-          </p>
         </div>
       </main>
     </>
