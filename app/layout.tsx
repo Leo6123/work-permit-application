@@ -17,7 +17,8 @@ export default async function RootLayout({
   if (process.env.NEXT_PUBLIC_SUPABASE_URL && (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)) {
     try {
       const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       userEmail = user?.email ?? null;
     } catch {
       // Supabase Auth 未設定或連線失敗時不顯示登入列
