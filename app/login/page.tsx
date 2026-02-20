@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Shield, LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
@@ -35,7 +35,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans bg-[linear-gradient(rgba(15,23,42,0.9),rgba(15,23,42,0.95)),repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(30,41,59,0.08)_2px,rgba(30,41,59,0.08)_4px)]">
+    <>
       <nav className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-cyan-500/10 border border-cyan-500/50 rounded flex items-center justify-center">
@@ -108,6 +108,20 @@ export default function LoginPage() {
           </p>
         </div>
       </main>
+    </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen bg-slate-950 text-white font-sans bg-[linear-gradient(rgba(15,23,42,0.9),rgba(15,23,42,0.95)),repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(30,41,59,0.08)_2px,rgba(30,41,59,0.08)_4px)]">
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-slate-400">載入中...</p>
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }
