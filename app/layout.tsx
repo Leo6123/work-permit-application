@@ -3,10 +3,12 @@ import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { AuthHeader } from "@/components/AuthHeader";
 
+const iconHref = `/icon?v=${process.env.VERCEL_GIT_COMMIT_SHA ?? "1"}`;
+
 export const metadata: Metadata = {
   title: "Work Permit Application",
   description: "Work Permit Application System",
-  icons: { icon: "/icon" },
+  icons: { icon: [{ url: iconHref, type: "image/png", sizes: "32x32" }] },
 };
 
 export default async function RootLayout({
@@ -28,6 +30,9 @@ export default async function RootLayout({
 
   return (
     <html lang="zh-TW">
+      <head>
+        <link rel="icon" href={iconHref} type="image/png" sizes="32x32" />
+      </head>
       <body className="antialiased">
         <AuthHeader userEmail={userEmail} />
         {children}
