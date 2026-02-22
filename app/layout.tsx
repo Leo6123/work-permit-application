@@ -8,7 +8,12 @@ const iconHref = `/icon?v=${process.env.VERCEL_GIT_COMMIT_SHA ?? "1"}`;
 export const metadata: Metadata = {
   title: "Work Permit Application",
   description: "Work Permit Application System",
-  icons: { icon: [{ url: iconHref, type: "image/png", sizes: "32x32" }] },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: iconHref, type: "image/png", sizes: "32x32" },
+    ],
+  },
 };
 
 export default async function RootLayout({
@@ -31,6 +36,7 @@ export default async function RootLayout({
   return (
     <html lang="zh-TW">
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="icon" href={iconHref} type="image/png" sizes="32x32" />
       </head>
       <body className="antialiased">
