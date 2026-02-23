@@ -1,17 +1,19 @@
-// Email 通知服務 - 使用 Resend 發送真實郵件
+// Email 通知服務 - 支援 n8n Webhook 或 Resend 發送真實郵件
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-// 初始化 Resend（如果有 API Key）
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// n8n Webhook URL（優先使用）
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || null;
 
-// 部署時若未設定 RESEND_API_KEY，只會 console 模擬、不會真的發信
-if (!resend && process.env.NODE_ENV === 'production') {
-  console.warn('[notifications] RESEND_API_KEY 未設定 - 審核通過時不會發送真實 Email，僅記錄於日誌。請在 Vercel → Project → Settings → Environment Variables 新增 RESEND_API_KEY。');
+// 初始化 Resend（如果有 API Key，且未設定 n8n）
+const resend = !N8N_WEBHOOK_URL && process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+// 部署時若兩者皆未設定，只會 console 模擬、不會真的發信
+if (!N8N_WEBHOOK_URL && !resend && process.env.NODE_ENV === 'production') {
+  console.warn('[notifications] N8N_WEBHOOK_URL 與 RESEND_API_KEY 皆未設定 - 審核通過時不會發送真實 Email，僅記錄於日誌。');
 }
 
-// 發送者 Email（需要在 Resend 驗證的網域，或使用 onboarding@resend.dev 測試）
-// 若使用 onboarding@resend.dev：Resend 免費版僅能寄給「註冊 Resend 時的信箱」，申請人若為其他信箱會收不到。需在 Resend 驗證網域後改用自訂 FROM_EMAIL 才能寄給任意收件人。
+// 發送者 Email（使用 Resend 時需要在 Resend 驗證的網域）
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const FROM_NAME = process.env.FROM_NAME || '施工安全作業許可系統';
 
@@ -59,7 +61,38 @@ export async function sendNotification(data: NotificationData): Promise<void> {
   let success = false;
   let errorMessage: string | null = null;
 
-  if (resend) {
+  if (N8N_WEBHOOK_URL) {
+    // 優先使用 n8n Webhook 發信
+    try {
+      const response = await fetch(N8N_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: data.to,
+          subject: data.subject,
+          html: htmlContent,
+          text: data.body,
+          fromName: FROM_NAME,
+          fromEmail: FROM_EMAIL,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        errorMessage = `n8n webhook 回傳錯誤 ${response.status}: ${errText}`;
+        console.error(`❌ n8n webhook 失敗 to ${data.to}:`, errorMessage);
+        logNotification(data);
+      } else {
+        success = true;
+        console.log(`✅ Email 透過 n8n 發送至 ${data.to}`);
+      }
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`❌ n8n webhook 呼叫失敗 to ${data.to}:`, errorMessage);
+      logNotification(data);
+    }
+  } else if (resend) {
+    // 使用 Resend 發信
     try {
       const result = await resend.emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
@@ -84,7 +117,7 @@ export async function sendNotification(data: NotificationData): Promise<void> {
     }
   } else {
     logNotification(data);
-    errorMessage = "未設定 RESEND_API_KEY，未實際發送";
+    errorMessage = "未設定 N8N_WEBHOOK_URL 或 RESEND_API_KEY，未實際發送";
   }
 
   if (data.applicationId && data.emailType) {

@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!user) {
     if (pathname.startsWith("/api/")) {
-      if (pathname.startsWith("/api/auth/") || pathname === "/api/me") return response;
+      if (pathname.startsWith("/api/auth/") || pathname === "/api/me" || pathname === "/api/health" || pathname === "/api/test-n8n") return response;
       return NextResponse.json({ error: "請先登入" }, { status: 401 });
     }
     if (!isPublicPath(pathname)) {
