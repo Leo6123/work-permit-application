@@ -33,13 +33,14 @@ interface NotificationData {
  */
 export async function sendNotification(data: NotificationData): Promise<void> {
   // 建立 HTML 郵件內容
+  const htmlBody = data.body.replace(/\n/g, '<br>');
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 20px; border-radius: 8px 8px 0 0;">
         <h2 style="color: white; margin: 0;">施工安全作業許可系統</h2>
       </div>
       <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-        <p style="white-space: pre-line; color: #374151; line-height: 1.6;">${data.body}</p>
+        <p style="color: #374151; line-height: 1.6;">${htmlBody}</p>
         ${data.link ? `
           <div style="margin-top: 20px;">
             <a href="${data.link}" 
