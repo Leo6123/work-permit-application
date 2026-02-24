@@ -2,14 +2,14 @@
 // 分兩套：① 權限（誰可以登入並擔任該角色審核） ② Resend 通知（信寄給誰，可測試用）
 
 // ---------- ① Resend 通知用（信寄到這些信箱） ----------
-export const EHS_MANAGER_EMAIL = process.env.EHS_MANAGER_EMAIL || "cti912@hotmail.com";
+export const EHS_MANAGER_EMAIL = process.env.EHS_MANAGER_EMAIL || "attagal.lai@avient.com";
 
 const DEFAULT_DEPARTMENT_MANAGERS: Record<string, string> = {
-  "維修部": "cti912@hotmail.com",
-  "生產部": "cti912@hotmail.com",
-  "實驗室": "cti912@hotmail.com",
-  "R&D": "cti912@hotmail.com",
-  "QC": "cti912@hotmail.com",
+  "維修部": "leo.chang@avient.com",
+  "生產部": "leo.chang@avient.com",
+  "實驗室": "leo.chang@avient.com",
+  "R&D": "leo.chang@avient.com",
+  "QC": "leo.chang@avient.com",
 };
 
 /** 獲取營運經理 Email（Resend 通知用） */
@@ -30,11 +30,11 @@ export function getDepartmentManagerEmail(department: string): string | null {
 }
 
 const DEFAULT_AREA_SUPERVISORS: Record<string, string> = {
-  "生產經理": "cti912@hotmail.com",
-  "倉庫經理": "cti912@hotmail.com",
-  "技術部經理": "cti912@hotmail.com",
-  "研發部經理": "cti912@hotmail.com",
-  "維修部經理": "cti912@hotmail.com",
+  "生產經理": "hamish.chen@avient.com",
+  "倉庫經理": "hamish.chen@avient.com",
+  "技術部經理": "hsingkuo1.chin@avient.com",
+  "研發部經理": "sting.chiu@avient.com",
+  "維修部經理": "jack.chen@avient.com",
 };
 
 /** 獲取作業區域主管 Email（Resend 通知用） */
@@ -61,7 +61,7 @@ const DEFAULT_APPLICANT_LIST = "Jack Chen:jack.chen@avient.com,Charlie Lin:charl
 const DEFAULT_ADMIN_EMAILS = "cti912@hotmail.com";
 const DEFAULT_EHS_PERMISSION_EMAILS = "attagal.lai@avient.com";
 const DEFAULT_OPERATIONS_MANAGER_PERMISSION_EMAILS = "leo.chang@avient.com";
-const DEFAULT_AREA_SUPERVISORS_PERMISSION = "生產經理:hamish.chen@avient.com";
+const DEFAULT_AREA_SUPERVISORS_PERMISSION = "生產經理:hamish.chen@avient.com,倉庫經理:hamish.chen@avient.com,技術部經理:hsingkuo1.chin@avient.com,研發部經理:sting.chiu@avient.com,維修部經理:jack.chen@avient.com";
 
 /** 管理者 Email 列表（可進所有頁面、所有審核）。 */
 export function getAdminEmails(): string[] {
