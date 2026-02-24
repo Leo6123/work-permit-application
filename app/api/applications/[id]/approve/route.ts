@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ehsApprovalRequestSchema, approvalRequestSchema } from "@/lib/validation";
 import { notifyDepartmentManager, notifyApplicant, notifyApplicantProgress, notifyEHSManagerRejection, notifyEHSManagerApproval, notifyEHSManager } from "@/lib/notifications";
-import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail, canAreaSupervisorApprove, isEHSPermission, isOperationsManagerPermission } from "@/lib/config";
+import { EHS_MANAGER_EMAIL, getDepartmentManagerEmail, isAreaSupervisorPermission, isAdmin, getAreaSupervisorEmail, isEHSPermission, isOperationsManagerPermission } from "@/lib/config";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,7 +40,17 @@ export async function POST(
     }
 
     // 依「權限」判斷審核人員類型（與 Resend 通知用信箱分開）
-    const isAreaSupervisor = canAreaSupervisorApprove(body.approverEmail, application.areaSupervisorEmail);
+    // 優先使用 hotWorkDetails.areaSupervisor 職稱查目前 config 的 email，避免 DB 儲存的舊 email 造成審核失敗
+    let areaSupervisorName: string | null = null;
+    try {
+      const hazardousOps = JSON.parse(application.hazardousOperations);
+      areaSupervisorName = hazardousOps.hotWorkDetails?.areaSupervisor || null;
+    } catch { /* ignore parse errors */ }
+
+    const isAreaSupervisor = isAdmin(body.approverEmail) ||
+      (areaSupervisorName
+        ? isAreaSupervisorPermission(body.approverEmail, areaSupervisorName)
+        : false);
     const isEHSManager = isEHSPermission(body.approverEmail);
 
     // 根據審核人員類型選擇驗證 schema
@@ -77,9 +87,11 @@ export async function POST(
     if (application.status === "pending_area_supervisor") {
       // 應該由作業區域主管審核
       if (!isAreaSupervisor) {
-        if (application.areaSupervisorEmail) {
+        const supervisorEmail = (areaSupervisorName && getAreaSupervisorEmail(areaSupervisorName))
+          || application.areaSupervisorEmail;
+        if (supervisorEmail) {
           return NextResponse.json(
-            { error: `此申請目前等待作業區域主管審核。請使用作業區域主管的 Email：${application.areaSupervisorEmail}` },
+            { error: `此申請目前等待作業區域主管審核。請使用作業區域主管的 Email：${supervisorEmail}` },
             { status: 403 }
           );
         } else {
