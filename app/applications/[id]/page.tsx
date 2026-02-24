@@ -55,14 +55,14 @@ export default function ApplicationDetailPage() {
       const isEhs = application.status === "pending_ehs";
       const isOps = application.status === "pending_manager";
       const can =
-        (isArea && currentUser.roles.areaSupervisor && application.areaSupervisorEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (isArea && currentUser.roles.areaSupervisor) ||
         (isEhs && currentUser.roles.ehs) ||
         (isOps && currentUser.roles.operationsManager);
       if (can) {
         setApprovalData((prev) => (prev.approverEmail === currentUser.email ? prev : { ...prev, approverEmail: currentUser.email }));
       }
     }
-  }, [currentUser?.email, application?.status, application?.areaSupervisorEmail]);
+  }, [currentUser?.email, application?.status]);
 
   const fetchApplication = async () => {
     try {
@@ -524,7 +524,7 @@ export default function ApplicationDetailPage() {
   const isOperationsManagerApproval = application.status === "pending_manager";
   const hasPermissionForThisStep =
     currentUser &&
-    ((isAreaSupervisorApproval && currentUser.roles.areaSupervisor && application.areaSupervisorEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+    ((isAreaSupervisorApproval && currentUser.roles.areaSupervisor) ||
      (isEHSManagerApproval && currentUser.roles.ehs) ||
      (isOperationsManagerApproval && currentUser.roles.operationsManager));
   const canApprove =

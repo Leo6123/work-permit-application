@@ -18,12 +18,8 @@ export function getDepartmentManagerEmail(department: string): string | null {
   if (operationsManagerEmail) return operationsManagerEmail;
   const managersEnv = process.env.DEPARTMENT_MANAGERS || "";
   if (managersEnv) {
-    const managers = managersEnv.split(",").map((m) => {
-      const parts = m.split(":");
-      if (parts.length >= 2) return { dept: parts[0]?.trim() || "", email: parts[1]?.trim() || "" };
-      return null;
-    }).filter((m): m is { dept: string; email: string } => m !== null && m.dept !== "" && m.email !== "");
-    const manager = managers.find((m) => m.dept === department);
+    const managers = parseNameEmailPairs(managersEnv);
+    const manager = managers.find((m) => m.name === department);
     if (manager?.email) return manager.email;
   }
   return DEFAULT_DEPARTMENT_MANAGERS[department] || null;
@@ -50,10 +46,15 @@ export function getAreaSupervisorEmail(areaSupervisor: string): string | null {
 
 // ---------- ② 權限用（誰可以擔任該角色審核 / 誰可填單 / 管理者） ----------
 function parseNameEmailPairs(env: string): { name: string; email: string }[] {
-  return env.split(",").map((s) => {
-    const parts = s.split(":");
-    if (parts.length >= 2) return { name: parts[0]?.trim() || "", email: parts[1]?.trim() || "" };
-    return null;
+  // Support both comma-separated and newline-separated formats (Vercel env vars may use newlines)
+  return env.split(/[\n,]+/).map((s) => {
+    s = s.trim();
+    const colonIdx = s.indexOf(":");
+    if (colonIdx === -1) return null;
+    const name = s.slice(0, colonIdx).trim();
+    const email = s.slice(colonIdx + 1).trim();
+    if (!name || !email) return null;
+    return { name, email };
   }).filter((s): s is { name: string; email: string } => s !== null && s.name !== "" && s.email !== "");
 }
 
