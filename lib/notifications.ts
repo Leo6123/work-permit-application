@@ -14,7 +14,7 @@ if (!N8N_WEBHOOK_URL && !resend && process.env.NODE_ENV === 'production') {
 }
 
 // 發送者 Email（使用 Resend 時需要在 Resend 驗證的網域）
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'afn3028@gmail.com';
 const FROM_NAME = process.env.FROM_NAME || '施工安全作業許可系統';
 
 interface NotificationData {
