@@ -104,9 +104,8 @@ export async function POST(
     } else if (application.status === "pending_ehs") {
       // 應該由 EHS Manager 審核
       if (!isEHSManager) {
-        const ehsEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
         return NextResponse.json(
-          { error: `此申請目前等待 EHS Manager 審核。請使用 EHS Manager 的 Email：${ehsEmail}` },
+          { error: `此申請目前等待 EHS Manager 審核。請使用 EHS Manager 的 Email：${EHS_MANAGER_EMAIL}` },
           { status: 403 }
         );
       }
@@ -223,10 +222,9 @@ export async function POST(
         }
       } else {
         // 營運經理拒絕：通知 EHS Manager + 申請人
-        const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
-        if (ehsManagerEmail) {
+        if (EHS_MANAGER_EMAIL) {
           await notifyEHSManagerRejection(
-            ehsManagerEmail,
+            EHS_MANAGER_EMAIL,
             params.id,
             application.applicantName,
             application.department,
@@ -250,10 +248,9 @@ export async function POST(
       }
     } else if (approverType === "area_supervisor") {
       // 作業區域主管通過（動火作業）：通知 EHS Manager + 通知申請人進度更新
-      const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
-      if (ehsManagerEmail) {
+      if (EHS_MANAGER_EMAIL) {
         await notifyEHSManager(
-          ehsManagerEmail,
+          EHS_MANAGER_EMAIL,
           params.id,
           application.applicantName,
           application.department,
@@ -276,8 +273,7 @@ export async function POST(
     } else if (approverType === "ehs_manager") {
       // EHS Manager 通過：通知營運經理 + 通知申請人進度更新
       console.log("[approve] EHS Manager 通過，準備發送通知：營運經理 + 申請人進度");
-      const deptManagerEmail = application.departmentManagerEmail || 
-                               getDepartmentManagerEmail(application.department);
+      const deptManagerEmail = getDepartmentManagerEmail(application.department);
       if (deptManagerEmail) {
         await notifyDepartmentManager(
           deptManagerEmail,
@@ -302,10 +298,9 @@ export async function POST(
       }
     } else {
       // 營運經理通過：完成審查，通知 EHS Manager + 申請人
-      const ehsManagerEmail = application.ehsManagerEmail || EHS_MANAGER_EMAIL;
-      if (ehsManagerEmail) {
+      if (EHS_MANAGER_EMAIL) {
         await notifyEHSManagerApproval(
-          ehsManagerEmail,
+          EHS_MANAGER_EMAIL,
           params.id,
           application.applicantName,
           application.department,
