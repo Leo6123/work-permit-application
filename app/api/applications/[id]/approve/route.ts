@@ -273,8 +273,7 @@ export async function POST(
     } else if (approverType === "ehs_manager") {
       // EHS Manager 通過：通知營運經理 + 通知申請人進度更新
       console.log("[approve] EHS Manager 通過，準備發送通知：營運經理 + 申請人進度");
-      const deptManagerEmail = application.departmentManagerEmail || 
-                               getDepartmentManagerEmail(application.department);
+      const deptManagerEmail = getDepartmentManagerEmail(application.department);
       if (deptManagerEmail) {
         await notifyDepartmentManager(
           deptManagerEmail,
