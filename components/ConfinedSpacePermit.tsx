@@ -471,66 +471,66 @@ export default function ConfinedSpacePermit({ application }: ConfinedSpacePermit
               <tr>
                 <td className="border border-black p-1">氧氣(O₂)%</td>
                 <td className="border border-black p-1"></td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
               </tr>
               <tr>
                 <td className="border border-black p-1">一氧化碳(CO)ppm</td>
                 <td className="border border-black p-1"></td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
               </tr>
               <tr>
                 <td className="border border-black p-1">硫化氫(H₂S)ppm</td>
                 <td className="border border-black p-1"></td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
               </tr>
               <tr>
                 <td className="border border-black p-1">可燃性氣體 LEL</td>
                 <td className="border border-black p-1"></td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
-                <td className="border border-black p-1">(測3點)</td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
+                <td className="border border-black p-1"></td>
               </tr>
             </tbody>
           </table>

@@ -281,6 +281,11 @@ export default function ApplicationDetailPage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    // 收集當前頁面所有樣式表連結（確保 Tailwind CSS 在新視窗中生效，格線才能正確顯示）
+    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map(link => `<link rel="stylesheet" href="${(link as HTMLLinkElement).href}">`)
+      .join('\n');
+
     // 獲取許可證表單的 HTML
     let permitHtml = '';
     if (shouldShowHotWorkPermit && hotWorkDetails) {
@@ -459,11 +464,13 @@ export default function ApplicationDetailPage() {
       <html>
         <head>
           <title>施工安全作業許可申請 - 完整列印</title>
+          ${styleLinks}
           <style>
             body { margin: 0; padding: 0; }
             .page-break { page-break-after: always; }
             @media print {
               .page-break { page-break-after: always; }
+              body * { visibility: visible !important; }
             }
           </style>
         </head>
@@ -477,11 +484,18 @@ export default function ApplicationDetailPage() {
 
     printWindow.document.write(fullHtml);
     printWindow.document.close();
-    
-    // 等待內容載入後列印
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+
+    // 等待樣式表載入完成後再列印，確保格線正確顯示
+    let printed = false;
+    const doPrint = () => {
+      if (!printed && !printWindow.closed) {
+        printed = true;
+        printWindow.print();
+      }
+    };
+    printWindow.onload = doPrint;
+    // 保險起見：若 onload 未觸發，1000ms 後仍列印
+    setTimeout(doPrint, 1000);
   };
 
   // 條件返回（在所有 hooks 之後）
