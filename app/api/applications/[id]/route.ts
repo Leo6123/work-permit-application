@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
+import { getAreaSupervisorPermissionMap } from "@/lib/config";
 
 // GET: 查詢單個申請詳情
 export async function GET(
@@ -29,13 +30,20 @@ export async function GET(
     }
 
     // 解析 JSON 字段並添加工單編號
+    const hazardousOperations = JSON.parse(application.hazardousOperations);
+    // 從當前權限 config 查出作業區域主管的 permission email（避免 DB 儲存的舊通知 email 造成前端審核按鈕消失）
+    const areaSupervisorName = hazardousOperations?.hotWorkDetails?.areaSupervisor ?? null;
+    const areaSupervisorPermissionEmail = areaSupervisorName
+      ? (getAreaSupervisorPermissionMap()[areaSupervisorName] ?? null)
+      : null;
     const formattedApplication = {
       ...application,
       contractorInfo: JSON.parse(application.contractorInfo),
       hazardFactors: JSON.parse(application.hazardFactors),
-      hazardousOperations: JSON.parse(application.hazardousOperations),
+      hazardousOperations,
       personnelInfo: JSON.parse(application.personnelInfo),
       workOrderNumber: getWorkOrderNumberFromDate(application.createdAt),
+      areaSupervisorPermissionEmail,
     };
 
     return NextResponse.json(formattedApplication);
