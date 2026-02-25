@@ -28,7 +28,7 @@ export default function ApplicationDetailPage() {
   const pdfContentRef = useRef<HTMLDivElement>(null);
   const [pdfTemplateHtml, setPdfTemplateHtml] = useState<string | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; roles: { ehs: boolean; areaSupervisor: boolean; operationsManager: boolean } } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string; roles: { ehs: boolean; areaSupervisor: boolean; operationsManager: boolean; isAdmin: boolean } } | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -55,7 +55,7 @@ export default function ApplicationDetailPage() {
       const isEhs = application.status === "pending_ehs";
       const isOps = application.status === "pending_manager";
       const can =
-        (isArea && currentUser.roles.areaSupervisor) ||
+        (isArea && (currentUser.roles.isAdmin || (currentUser.roles.areaSupervisor && currentUser.email.toLowerCase() === (application.areaSupervisorEmail || "").toLowerCase()))) ||
         (isEhs && currentUser.roles.ehs) ||
         (isOps && currentUser.roles.operationsManager);
       if (can) {
@@ -524,7 +524,7 @@ export default function ApplicationDetailPage() {
   const isOperationsManagerApproval = application.status === "pending_manager";
   const hasPermissionForThisStep =
     currentUser &&
-    ((isAreaSupervisorApproval && currentUser.roles.areaSupervisor) ||
+    ((isAreaSupervisorApproval && (currentUser.roles.isAdmin || (currentUser.roles.areaSupervisor && currentUser.email.toLowerCase() === (application.areaSupervisorEmail || "").toLowerCase()))) ||
      (isEHSManagerApproval && currentUser.roles.ehs) ||
      (isOperationsManagerApproval && currentUser.roles.operationsManager));
   const canApprove =
