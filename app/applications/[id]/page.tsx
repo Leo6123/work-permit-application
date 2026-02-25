@@ -54,8 +54,9 @@ export default function ApplicationDetailPage() {
       const isArea = application.status === "pending_area_supervisor";
       const isEhs = application.status === "pending_ehs";
       const isOps = application.status === "pending_manager";
+      const effectiveAreaSupervisorEmail = (application.areaSupervisorPermissionEmail || application.areaSupervisorEmail || "").toLowerCase();
       const can =
-        (isArea && (currentUser.roles.isAdmin || (currentUser.roles.areaSupervisor && currentUser.email.toLowerCase() === (application.areaSupervisorEmail || "").toLowerCase()))) ||
+        (isArea && (currentUser.roles.isAdmin || (currentUser.roles.areaSupervisor && currentUser.email.toLowerCase() === effectiveAreaSupervisorEmail))) ||
         (isEhs && currentUser.roles.ehs) ||
         (isOps && currentUser.roles.operationsManager);
       if (can) {
@@ -522,9 +523,10 @@ export default function ApplicationDetailPage() {
   const isAreaSupervisorApproval = application.status === "pending_area_supervisor";
   const isEHSManagerApproval = application.status === "pending_ehs";
   const isOperationsManagerApproval = application.status === "pending_manager";
+  const effectiveAreaSupervisorEmail = (application.areaSupervisorPermissionEmail || application.areaSupervisorEmail || "").toLowerCase();
   const hasPermissionForThisStep =
     currentUser &&
-    ((isAreaSupervisorApproval && (currentUser.roles.isAdmin || (currentUser.roles.areaSupervisor && currentUser.email.toLowerCase() === (application.areaSupervisorEmail || "").toLowerCase()))) ||
+    ((isAreaSupervisorApproval && (currentUser.roles.isAdmin || (currentUser.roles.areaSupervisor && currentUser.email.toLowerCase() === effectiveAreaSupervisorEmail))) ||
      (isEHSManagerApproval && currentUser.roles.ehs) ||
      (isOperationsManagerApproval && currentUser.roles.operationsManager));
   const canApprove =
