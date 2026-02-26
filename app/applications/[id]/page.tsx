@@ -537,6 +537,10 @@ export default function ApplicationDetailPage() {
   const isAreaSupervisorApproval = application.status === "pending_area_supervisor";
   const isEHSManagerApproval = application.status === "pending_ehs";
   const isOperationsManagerApproval = application.status === "pending_manager";
+  const isBasicWorkOnly = application.hazardFactors.generalWork &&
+    !application.hazardFactors.hotWork &&
+    !application.hazardFactors.confinedSpace &&
+    !application.hazardFactors.workAtHeight;
   const effectiveAreaSupervisorEmail = (application.areaSupervisorPermissionEmail || application.areaSupervisorEmail || "").toLowerCase();
   const hasPermissionForThisStep =
     currentUser &&
@@ -854,33 +858,37 @@ export default function ApplicationDetailPage() {
               </div>
             </div>
 
-            <div className="text-slate-600 text-2xl">→</div>
+            {/* 營運經理審核（非純一般作業才需要） */}
+            {!isBasicWorkOnly && (
+              <>
+                <div className="text-slate-600 text-2xl">→</div>
 
-            {/* 營運經理審核 */}
-            <div className={`flex-1 p-4 rounded-lg border ${
-              application.status === "pending_manager" 
-                ? "bg-amber-500/10 border-amber-500/30" 
-                : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "approve") 
-                  ? "bg-emerald-500/10 border-emerald-500/30"
-                  : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "reject")
-                    ? "bg-red-500/10 border-red-500/30"
-                    : "bg-slate-800/50 border-slate-700"
-            }`}>
-              <div className="font-medium text-white">營運經理審核</div>
-              <div className={`text-sm mt-1 ${
-                application.status === "pending_manager" 
-                  ? "text-amber-400" 
-                  : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "approve")
-                    ? "text-emerald-400"
-                    : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "reject")
-                      ? "text-red-400"
-                      : "text-slate-500"
-              }`}>
-                {application.approvalLogs.find(log => log.approverType === "department_manager")
-                  ? (application.approvalLogs.find(log => log.approverType === "department_manager")?.action === "approve" ? "✓ 已通過" : "✗ 已拒絕")
-                  : (application.status === "pending_area_supervisor" || application.status === "pending_ehs") ? "○ 等待中" : "● 待審核"}
-              </div>
-            </div>
+                <div className={`flex-1 p-4 rounded-lg border ${
+                  application.status === "pending_manager"
+                    ? "bg-amber-500/10 border-amber-500/30"
+                    : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "approve")
+                      ? "bg-emerald-500/10 border-emerald-500/30"
+                      : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "reject")
+                        ? "bg-red-500/10 border-red-500/30"
+                        : "bg-slate-800/50 border-slate-700"
+                }`}>
+                  <div className="font-medium text-white">營運經理審核</div>
+                  <div className={`text-sm mt-1 ${
+                    application.status === "pending_manager"
+                      ? "text-amber-400"
+                      : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "approve")
+                        ? "text-emerald-400"
+                        : application.approvalLogs.some(log => log.approverType === "department_manager" && log.action === "reject")
+                          ? "text-red-400"
+                          : "text-slate-500"
+                  }`}>
+                    {application.approvalLogs.find(log => log.approverType === "department_manager")
+                      ? (application.approvalLogs.find(log => log.approverType === "department_manager")?.action === "approve" ? "✓ 已通過" : "✗ 已拒絕")
+                      : (application.status === "pending_area_supervisor" || application.status === "pending_ehs") ? "○ 等待中" : "● 待審核"}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="text-slate-600 text-2xl">→</div>
 

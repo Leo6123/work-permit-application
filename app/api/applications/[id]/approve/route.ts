@@ -149,13 +149,21 @@ export async function POST(
     });
 
     // 更新申請狀態（根據審核人類型，而不是 Email）
+    // 判斷是否為純一般作業（無動火、局限空間、高處作業），純一般作業 EHS 通過後直接完成
+    const hazardFactorsParsed = JSON.parse(application.hazardFactors);
+    const isBasicWorkOnly = hazardFactorsParsed.generalWork &&
+      !hazardFactorsParsed.hotWork &&
+      !hazardFactorsParsed.confinedSpace &&
+      !hazardFactorsParsed.workAtHeight;
+
     let newStatus: string;
     if (data.action === "reject") {
       newStatus = "rejected";
     } else if (approverType === "area_supervisor") {
       newStatus = "pending_ehs";
     } else if (approverType === "ehs_manager") {
-      newStatus = "pending_manager";
+      // 純一般作業：EHS 通過後直接核准，無需營運經理審核
+      newStatus = isBasicWorkOnly ? "approved" : "pending_manager";
     } else if (approverType === "department_manager") {
       newStatus = "approved";
     } else {
@@ -271,30 +279,45 @@ export async function POST(
         console.warn("[approve] 申請人 Email 為空，跳過通知申請人（作業區域主管通過）");
       }
     } else if (approverType === "ehs_manager") {
-      // EHS Manager 通過：通知營運經理 + 通知申請人進度更新
-      console.log("[approve] EHS Manager 通過，準備發送通知：營運經理 + 申請人進度");
-      const deptManagerEmail = getDepartmentManagerEmail(application.department);
-      if (deptManagerEmail) {
-        await notifyDepartmentManager(
-          deptManagerEmail,
-          params.id,
-          application.applicantName,
-          application.department,
-          application.workArea,
-          workOrderNumber
-        );
-      }
-      // 同時通知申請人：EHS 審核已通過，進入營運經理審核
-      if (application.applicantEmail) {
-        console.log("[approve] 通知申請人（進度）:", application.applicantEmail);
-        await notifyApplicantProgress(
-          application.applicantEmail,
-          params.id,
-          "EHS Manager 已審核通過，正在等待營運經理最終審核",
-          workOrderNumber
-        );
+      if (isBasicWorkOnly) {
+        // 純一般作業：EHS 通過即完成，通知申請人核准
+        console.log("[approve] EHS Manager 通過（純一般作業），通知申請人：核准完成");
+        if (application.applicantEmail) {
+          await notifyApplicant(
+            application.applicantEmail,
+            params.id,
+            "approved",
+            undefined,
+            workOrderNumber
+          );
+        } else {
+          console.warn("[approve] 申請人 Email 為空，跳過通知申請人（純一般作業 EHS 通過）");
+        }
       } else {
-        console.warn("[approve] 申請人 Email 為空，跳過通知申請人（EHS 通過）");
+        // 非純一般作業：通知營運經理 + 通知申請人進度更新
+        console.log("[approve] EHS Manager 通過，準備發送通知：營運經理 + 申請人進度");
+        const deptManagerEmail = getDepartmentManagerEmail(application.department);
+        if (deptManagerEmail) {
+          await notifyDepartmentManager(
+            deptManagerEmail,
+            params.id,
+            application.applicantName,
+            application.department,
+            application.workArea,
+            workOrderNumber
+          );
+        }
+        if (application.applicantEmail) {
+          console.log("[approve] 通知申請人（進度）:", application.applicantEmail);
+          await notifyApplicantProgress(
+            application.applicantEmail,
+            params.id,
+            "EHS Manager 已審核通過，正在等待營運經理最終審核",
+            workOrderNumber
+          );
+        } else {
+          console.warn("[approve] 申請人 Email 為空，跳過通知申請人（EHS 通過）");
+        }
       }
     } else {
       // 營運經理通過：完成審查，通知 EHS Manager + 申請人
