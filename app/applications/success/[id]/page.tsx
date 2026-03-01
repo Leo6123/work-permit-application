@@ -12,18 +12,21 @@ export default function ApplicationSuccessPage() {
   const applicationId = params.id as string;
   const [copied, setCopied] = useState(false);
   const [workOrderNumber, setWorkOrderNumber] = useState<string>("");
+  const [isHotWork, setIsHotWork] = useState(false);
 
   useEffect(() => {
-    // 從申請 ID 獲取申請資料以取得創建時間
+    // 從申請 ID 獲取申請資料以取得創建時間與作業類型
     fetch(`/api/applications/${applicationId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.createdAt) {
           setWorkOrderNumber(getWorkOrderNumberFromDate(data.createdAt));
         }
+        if (data.hazardFactors?.hotWork) {
+          setIsHotWork(true);
+        }
       })
       .catch(() => {
-        // 如果無法取得，使用當前時間生成（備用方案）
         setWorkOrderNumber(getWorkOrderNumberFromDate(new Date()));
       });
   }, [applicationId]);
@@ -106,7 +109,7 @@ export default function ApplicationSuccessPage() {
             <div className="space-y-2 text-sm text-slate-300">
               <div className="flex items-start gap-2">
                 <span className="text-blue-400 font-mono">1.</span>
-                <p>EHS Manager 已收到審核通知（Email 已發送至終端機）</p>
+                <p>{isHotWork ? "作業區域主管" : "EHS Manager"} 已收到審核通知（Email 已發送至終端機）</p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-blue-400 font-mono">2.</span>
