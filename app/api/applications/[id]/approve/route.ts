@@ -151,7 +151,7 @@ export async function POST(
     // 更新申請狀態（根據審核人類型，而不是 Email）
     // 判斷是否為純一般作業（無動火、局限空間、高處作業），純一般作業 EHS 通過後直接完成
     const hazardFactorsParsed = JSON.parse(application.hazardFactors);
-    const isBasicWorkOnly = hazardFactorsParsed.generalWork &&
+    const isBasicWorkOnly =
       !hazardFactorsParsed.hotWork &&
       !hazardFactorsParsed.confinedSpace &&
       !hazardFactorsParsed.workAtHeight;

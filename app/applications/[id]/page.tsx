@@ -537,7 +537,7 @@ export default function ApplicationDetailPage() {
   const isAreaSupervisorApproval = application.status === "pending_area_supervisor";
   const isEHSManagerApproval = application.status === "pending_ehs";
   const isOperationsManagerApproval = application.status === "pending_manager";
-  const isBasicWorkOnly = application.hazardFactors.generalWork &&
+  const isBasicWorkOnly =
     !application.hazardFactors.hotWork &&
     !application.hazardFactors.confinedSpace &&
     !application.hazardFactors.workAtHeight;
