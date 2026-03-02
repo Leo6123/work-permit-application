@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
-import { getAreaSupervisorPermissionMap } from "@/lib/config";
+import { getAreaSupervisorPermissionMap, isAdmin } from "@/lib/config";
+import { createClient } from "@/lib/supabase/server";
 
 // GET: 查詢單個申請詳情
 export async function GET(
@@ -56,12 +57,20 @@ export async function GET(
   }
 }
 
-// DELETE: 刪除申請
+// DELETE: 刪除申請（僅限管理者）
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // 驗證管理者權限
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const userEmail = session?.user?.email;
+    if (!userEmail || !isAdmin(userEmail)) {
+      return NextResponse.json({ error: "權限不足，僅管理者可刪除申請" }, { status: 403 });
+    }
+
     const applicationId = params.id;
 
     // 檢查申請是否存在

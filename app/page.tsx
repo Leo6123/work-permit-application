@@ -13,12 +13,19 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [canSubmitApplication, setCanSubmitApplication] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
     fetch("/api/me")
       .then((r) => r.json())
-      .then((data) => setCanSubmitApplication(!!data.roles?.canSubmitApplication))
-      .catch(() => setCanSubmitApplication(false));
+      .then((data) => {
+        setCanSubmitApplication(!!data.roles?.canSubmitApplication);
+        setIsAdminUser(!!data.roles?.isAdmin);
+      })
+      .catch(() => {
+        setCanSubmitApplication(false);
+        setIsAdminUser(false);
+      });
   }, []);
 
   // 載入完整的申請列表（用於統計）
@@ -329,13 +336,15 @@ export default function Home() {
                       </div>
                     </div>
                   </Link>
-                  <button
-                    onClick={(e) => handleDelete(e, app.id)}
-                    className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
-                    title="刪除申請"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {isAdminUser && (
+                    <button
+                      onClick={(e) => handleDelete(e, app.id)}
+                      className="absolute top-4 right-4 p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                      title="刪除申請"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               );
             })}
