@@ -90,19 +90,11 @@ export const applicationFormSchema = z.object({
 ).refine(
   (data) => {
     // 檢查開始和結束日期是否為同一天
+    // 直接比較日期字串的日期部分（格式：YYYY-MM-DDTHH:mm），避免時區問題
     if (data.workTimeStart && data.workTimeEnd) {
-      const startDate = new Date(data.workTimeStart);
-      const endDate = new Date(data.workTimeEnd);
-      
-      const startYear = startDate.getFullYear();
-      const startMonth = startDate.getMonth();
-      const startDay = startDate.getDate();
-      
-      const endYear = endDate.getFullYear();
-      const endMonth = endDate.getMonth();
-      const endDay = endDate.getDate();
-      
-      return startYear === endYear && startMonth === endMonth && startDay === endDay;
+      const startDatePart = data.workTimeStart.split('T')[0];
+      const endDatePart = data.workTimeEnd.split('T')[0];
+      return startDatePart === endDatePart;
     }
     return true;
   },

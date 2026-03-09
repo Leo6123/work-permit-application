@@ -150,8 +150,8 @@ export async function POST(request: NextRequest) {
       data: {
         applicantName: data.applicantName,
         department: data.department,
-        workTimeStart: new Date(data.workTimeStart),
-        workTimeEnd: new Date(data.workTimeEnd),
+        workTimeStart: new Date(data.workTimeStart + '+08:00'),
+        workTimeEnd: new Date(data.workTimeEnd + '+08:00'),
         workArea: data.workArea,
         workContent: data.workContent,
         contractorInfo: JSON.stringify(contractorInfo),
