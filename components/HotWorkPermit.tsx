@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 
 interface HotWorkDetails {
   personnelType: "employee" | "contractor";
@@ -15,9 +16,10 @@ interface HotWorkPermitProps {
   hotWorkDetails: HotWorkDetails;
   workTimeStart: string | Date;
   workTimeEnd: string | Date;
+  editable?: boolean;
 }
 
-export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd }: HotWorkPermitProps) {
+export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd, editable = false }: HotWorkPermitProps) {
   const endDate = new Date(workTimeEnd);
   const endDateStr = endDate.toLocaleDateString("zh-TW", {
     timeZone: "Asia/Taipei",
@@ -35,6 +37,39 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
     minute: "2-digit",
     hour12: false,
   });
+
+  // Checkbox state for right column (is/na pairs keyed by id)
+  const [cb, setCb] = useState<Record<string, boolean>>({});
+  const [lelValue, setLelValue] = useState("");
+  const [extraPatrolHours, setExtraPatrolHours] = useState("");
+  const [extraMonitorHours, setExtraMonitorHours] = useState("");
+  const [extraMeasures, setExtraMeasures] = useState("");
+
+  const toggle = (key: string) => setCb((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // Renders a yes/na checkbox pair
+  const renderCB = (id: string) =>
+    editable ? (
+      <>
+        <input
+          type="checkbox"
+          className="w-4 h-4 flex-shrink-0 cursor-pointer"
+          checked={!!cb[`${id}_yes`]}
+          onChange={() => toggle(`${id}_yes`)}
+        />
+        <input
+          type="checkbox"
+          className="w-4 h-4 flex-shrink-0 ml-1 cursor-pointer"
+          checked={!!cb[`${id}_na`]}
+          onChange={() => toggle(`${id}_na`)}
+        />
+      </>
+    ) : (
+      <>
+        <span className="w-4 text-center flex-shrink-0">☐</span>
+        <span className="w-4 text-center flex-shrink-0">☐</span>
+      </>
+    );
 
   return (
     <div id="hot-work-permit" className="bg-white text-black">
@@ -154,24 +189,20 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             </div>
 
             <div className="text-xs space-y-1">
-              <div className="flex items-center">
-                <span className="w-4 text-center flex-shrink-0">☐</span>
-                <span className="w-4 text-center flex-shrink-0">☐</span>
+              <div className="flex items-center gap-1">
+                {renderCB("pump")}
                 <span className="ml-1">消防泵正在運作並可自動啟動。</span>
               </div>
-              <div className="flex items-center">
-                <span className="w-4 text-center flex-shrink-0">☐</span>
-                <span className="w-4 text-center flex-shrink-0">☐</span>
+              <div className="flex items-center gap-1">
+                {renderCB("sprinkler")}
                 <span className="ml-1">灑水系統的供水控制閥為開啟狀態。</span>
               </div>
-              <div className="flex items-center">
-                <span className="w-4 text-center flex-shrink-0">☐</span>
-                <span className="w-4 text-center flex-shrink-0">☐</span>
+              <div className="flex items-center gap-1">
+                {renderCB("extinguisher")}
                 <span className="ml-1">滅火器處於工作狀態/可操作。</span>
               </div>
-              <div className="flex items-center">
-                <span className="w-4 text-center flex-shrink-0">☐</span>
-                <span className="w-4 text-center flex-shrink-0">☐</span>
+              <div className="flex items-center gap-1">
+                {renderCB("equipment")}
                 <span className="ml-1">熱加工操作設備處於良好工作狀態。</span>
               </div>
             </div>
@@ -180,44 +211,36 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             <div className="mt-2 bg-yellow-100 p-2">
               <h3 className="font-bold text-xs mb-1">在熱加工操作區35英尺（10公尺）以內的安全要求</h3>
               <div className="text-[10px] space-y-1">
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_cover")}
                   <span className="ml-1">採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_move")}
                   <span className="ml-1">移走可燃物或採用經核准（例如，FM認證）的焊接防護墊、防火毯和防火簾遮蔽可燃建築。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_isolate")}
                   <span className="ml-1">隔離易燃氣體、可燃液體或可燃粉塵/棉絨等潛在火源（如關閉設備）。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_removeLiquid")}
                   <span className="ml-1">移走可燃液體、可燃粉塵/棉絨和可燃殘留物。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_ventilation")}
                   <span className="ml-1">關閉通風和輸送系統。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_openings")}
                   <span className="ml-1">移走可燃物，對於存在開口或有導熱材料貫穿的地板、牆壁、天花板或屋頂的另一面，考慮進行二次防火巡視。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_combustibleRoof")}
                   <span className="ml-1">熱加工操作是否在可燃屋頂上進行（例如，熱熔法鋪設屋頂）？如果是，採取以下所需的額外預防措施。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("z35_roofEquip")}
                   <span className="ml-1">熱加工操作是否在有可燃屋頂的設備上進行？如果是，採取以下所需的額外預防措施。</span>
                 </div>
               </div>
@@ -227,29 +250,37 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             <div className="mt-2">
               <h3 className="font-bold text-xs mb-1">密閉設備、管道或管路上/內的熱加工操作</h3>
               <div className="text-[10px] space-y-1">
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("conf_isolate")}
                   <span className="ml-1">將設備與操作隔離。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("conf_purge")}
                   <span className="ml-1">移走可燃液體和淨化易燃氣體/蒸汽。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="ml-1">操作之前及/或操作過程中，監控易燃氣體/蒸汽。LEL讀數：_____</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("conf_monitor")}
+                  <span className="ml-1">
+                    操作之前及/或操作過程中，監控易燃氣體/蒸汽。LEL讀數：
+                    {editable ? (
+                      <input
+                        type="text"
+                        value={lelValue}
+                        onChange={(e) => setLelValue(e.target.value)}
+                        className="border-b border-black bg-gray-100 w-16 px-1 text-[10px] outline-none"
+                        placeholder="_____"
+                      />
+                    ) : (
+                      <span>_____</span>
+                    )}
+                  </span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("conf_removeDust")}
                   <span className="ml-1">移走可燃粉塵/棉絨或其他可燃材料。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("conf_noRemove")}
                   <span className="ml-1">是否在配有無法移走的可燃襯套或部件的設備上/內進行操作？如果是，採取以下所需的額外預防措施。</span>
                 </div>
               </div>
@@ -259,25 +290,49 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             <div className="mt-2">
               <h3 className="font-bold text-xs mb-1">對熱加工區進行防火巡視/防火監控</h3>
               <div className="text-[10px] space-y-1">
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("fw_continuous")}
                   <span className="ml-1">熱加工操作期間進行不間斷防火巡視。</span>
                 </div>
-                <div className="flex items-start">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
+                <div className="flex items-start gap-1">
+                  {renderCB("fw_afterOp")}
                   <span className="ml-1">熱加工操作結束後，對熱加工操作區類別進行</span>
                 </div>
-                <div className="flex items-start ml-4">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="ml-1">1小時或另外___小時的不間斷防火巡查。</span>
+                <div className="flex items-start gap-1 ml-4">
+                  {renderCB("fw_patrol")}
+                  <span className="ml-1">
+                    1小時或另外
+                    {editable ? (
+                      <input
+                        type="text"
+                        value={extraPatrolHours}
+                        onChange={(e) => setExtraPatrolHours(e.target.value)}
+                        className="border-b border-black bg-gray-100 w-10 px-1 text-[10px] outline-none mx-1"
+                        placeholder="___"
+                      />
+                    ) : (
+                      <span>___</span>
+                    )}
+                    小時的不間斷防火巡查。
+                  </span>
                 </div>
-                <div className="flex items-start ml-4">
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="w-4 text-center flex-shrink-0">☐</span>
-                  <span className="ml-1">3小時或另外___小時的防火監控。</span>
+                <div className="flex items-start gap-1 ml-4">
+                  {renderCB("fw_monitor")}
+                  <span className="ml-1">
+                    3小時或另外
+                    {editable ? (
+                      <input
+                        type="text"
+                        value={extraMonitorHours}
+                        onChange={(e) => setExtraMonitorHours(e.target.value)}
+                        className="border-b border-black bg-gray-100 w-10 px-1 text-[10px] outline-none mx-1"
+                        placeholder="___"
+                      />
+                    ) : (
+                      <span>___</span>
+                    )}
+                    小時的防火監控。
+                  </span>
                 </div>
               </div>
             </div>
@@ -285,7 +340,16 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             {/* 必要的額外預防措施 */}
             <div className="mt-2">
               <h3 className="font-bold text-xs mb-1">必要的額外預防措施:</h3>
-              <div className="border border-black h-16"></div>
+              {editable ? (
+                <textarea
+                  value={extraMeasures}
+                  onChange={(e) => setExtraMeasures(e.target.value)}
+                  className="border border-black w-full h-16 p-1 text-[10px] bg-gray-50 resize-none outline-none"
+                  placeholder="請填寫額外預防措施..."
+                />
+              ) : (
+                <div className="border border-black h-16 p-1 text-[10px] whitespace-pre-wrap">{extraMeasures}</div>
+              )}
             </div>
           </div>
         </div>
