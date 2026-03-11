@@ -69,7 +69,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
             {/* 許可證核准人確認 */}
             <div className="mt-2 border-t border-black pt-2 text-xs">
               <p className="mb-2">本人確認已對上述地點進行了檢查，已採取「必要預防措施」，並授權批准進行此項操作。</p>
-              <div>許可證核准人（正楷及簽名）<div className="border-b border-black h-6"></div></div>
+              <div>許可證核准人（正楷及簽名）<div className="border-b border-black h-6 text-gray-500 italic">參閱電子審核紀錄</div></div>
               <div className="mt-2">
                 <div className="font-bold">本許可證有效期至（限限一個班次）:</div>
                 <div className="grid grid-cols-3 gap-1 mt-1 text-[10px]">
