@@ -18,6 +18,24 @@ interface HotWorkPermitProps {
 }
 
 export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd }: HotWorkPermitProps) {
+  const endDate = new Date(workTimeEnd);
+  const endDateStr = endDate.toLocaleDateString("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const endHour = parseInt(
+    endDate.toLocaleString("en-US", { timeZone: "Asia/Taipei", hour: "numeric", hour12: false })
+  );
+  const isAM = endHour < 12;
+  const endTimeStr = endDate.toLocaleTimeString("zh-TW", {
+    timeZone: "Asia/Taipei",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
   return (
     <div id="hot-work-permit" className="bg-white text-black">
 
@@ -71,11 +89,11 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
               <p className="mb-2">本人確認已對上述地點進行了檢查，已採取「必要預防措施」，並授權批准進行此項操作。</p>
               <div>許可證核准人（正楷及簽名）<div className="border-b border-black h-6 text-gray-500 italic">參閱電子審核紀錄</div></div>
               <div className="mt-2">
-                <div className="font-bold">本許可證有效期至（限限一個班次）:</div>
+                <div className="font-bold">本許可證有效期至（僅限批准一個班次）:</div>
                 <div className="grid grid-cols-3 gap-1 mt-1 text-[10px]">
-                  <div>日期：______</div>
-                  <div>時間：______</div>
-                  <div>☐ 上午/下午</div>
+                  <div>日期：{endDateStr}</div>
+                  <div>時間：{endTimeStr}</div>
+                  <div>{isAM ? "☑" : "☐"} 上午　{isAM ? "☐" : "☑"} 下午</div>
                 </div>
               </div>
             </div>
