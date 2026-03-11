@@ -34,6 +34,23 @@ const DEFAULT_AREA_SUPERVISORS: Record<string, string> = {
 };
 
 const DEFAULT_AREA_SUPERVISORS_PHONE: Record<string, string> = {};
+const DEFAULT_AREA_SUPERVISORS_NAME: Record<string, string> = {};
+
+/**
+ * 獲取作業區域主管真實姓名（顯示於熱工許可證第2頁緊急聯絡人）
+ * 從環境變數 AREA_SUPERVISORS_NAME 讀取，格式：
+ *   "生產經理:Hamish Chen,倉庫經理:Hamish Chen"
+ * 若未設定則回傳 null（元件將 fallback 顯示職稱）
+ */
+export function getAreaSupervisorName(areaSupervisor: string): string | null {
+  const env = process.env.AREA_SUPERVISORS_NAME || "";
+  if (env) {
+    const pairs = parseNameEmailPairs(env);
+    const match = pairs.find((s) => s.name === areaSupervisor);
+    if (match?.email) return match.email; // email 欄位存放真實姓名
+  }
+  return DEFAULT_AREA_SUPERVISORS_NAME[areaSupervisor] || null;
+}
 
 /**
  * 獲取作業區域主管電話（顯示於熱工許可證第2頁緊急聯絡人）

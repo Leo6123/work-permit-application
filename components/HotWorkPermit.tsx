@@ -18,9 +18,10 @@ interface HotWorkPermitProps {
   workTimeEnd: string | Date;
   editable?: boolean;
   areaSupervisorPhone?: string | null;
+  areaSupervisorDisplayName?: string | null;
 }
 
-export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd, editable = false, areaSupervisorPhone }: HotWorkPermitProps) {
+export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd, editable = false, areaSupervisorPhone, areaSupervisorDisplayName }: HotWorkPermitProps) {
   const endDate = new Date(workTimeEnd);
   const endDateStr = endDate.toLocaleDateString("zh-TW", {
     timeZone: "Asia/Taipei",
@@ -382,7 +383,9 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
               </tr>
               {hotWorkDetails.areaSupervisor && areaSupervisorPhone && (
                 <tr>
-                  <td className="border border-black p-2">{hotWorkDetails.areaSupervisor}</td>
+                  <td className="border border-black p-2">
+                    {areaSupervisorDisplayName ?? hotWorkDetails.areaSupervisor}
+                  </td>
                   <td className="border border-black p-2">{areaSupervisorPhone}</td>
                 </tr>
               )}
