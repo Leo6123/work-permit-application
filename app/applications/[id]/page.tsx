@@ -1231,10 +1231,13 @@ export default function ApplicationDetailPage() {
               />
             )}
             {!isLoadingTemplate && !pdfTemplateHtml && (
-              <HotWorkPermit 
+              <HotWorkPermit
                 hotWorkDetails={hotWorkDetails}
                 workTimeStart={application.workTimeStart}
                 workTimeEnd={application.workTimeEnd}
+                editable={isEHSManagerApproval && !!canApprove}
+                areaSupervisorPhone={application.areaSupervisorPhone}
+                areaSupervisorDisplayName={application.areaSupervisorDisplayName}
               />
             )}
           </div>
