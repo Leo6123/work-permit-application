@@ -1236,6 +1236,7 @@ export default function ApplicationDetailPage() {
                 workTimeStart={application.workTimeStart}
                 workTimeEnd={application.workTimeEnd}
                 editable={isEHSManagerApproval && !!canApprove}
+                areaSupervisorPhone={application.areaSupervisorPhone}
               />
             )}
           </div>

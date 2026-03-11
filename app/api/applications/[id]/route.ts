@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
-import { getAreaSupervisorPermissionMap } from "@/lib/config";
+import { getAreaSupervisorPermissionMap, getAreaSupervisorPhone } from "@/lib/config";
 
 // GET: 查詢單個申請詳情
 export async function GET(
@@ -36,6 +36,9 @@ export async function GET(
     const areaSupervisorPermissionEmail = areaSupervisorName
       ? (getAreaSupervisorPermissionMap()[areaSupervisorName] ?? null)
       : null;
+    const areaSupervisorPhone = areaSupervisorName
+      ? getAreaSupervisorPhone(areaSupervisorName)
+      : null;
     const formattedApplication = {
       ...application,
       contractorInfo: JSON.parse(application.contractorInfo),
@@ -44,6 +47,7 @@ export async function GET(
       personnelInfo: JSON.parse(application.personnelInfo),
       workOrderNumber: getWorkOrderNumberFromDate(application.createdAt),
       areaSupervisorPermissionEmail,
+      areaSupervisorPhone,
     };
 
     return NextResponse.json(formattedApplication);

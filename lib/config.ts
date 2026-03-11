@@ -33,6 +33,23 @@ const DEFAULT_AREA_SUPERVISORS: Record<string, string> = {
   "維修部經理": "jack.chen@avient.com",
 };
 
+const DEFAULT_AREA_SUPERVISORS_PHONE: Record<string, string> = {};
+
+/**
+ * 獲取作業區域主管電話（顯示於熱工許可證第2頁緊急聯絡人）
+ * 從環境變數 AREA_SUPERVISORS_PHONE 讀取，格式：
+ *   "生產經理:0912-345-678,倉庫經理:0923-456-789"
+ */
+export function getAreaSupervisorPhone(areaSupervisor: string): string | null {
+  const env = process.env.AREA_SUPERVISORS_PHONE || "";
+  if (env) {
+    const pairs = parseNameEmailPairs(env);
+    const match = pairs.find((s) => s.name === areaSupervisor);
+    if (match?.email) return match.email; // email 欄位存放電話號碼
+  }
+  return DEFAULT_AREA_SUPERVISORS_PHONE[areaSupervisor] || null;
+}
+
 /** 獲取作業區域主管 Email（Resend 通知用） */
 export function getAreaSupervisorEmail(areaSupervisor: string): string | null {
   const supervisorsEnv = process.env.AREA_SUPERVISORS || "";
