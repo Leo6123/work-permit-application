@@ -113,6 +113,8 @@ export interface ApplicationWithLogs {
   approvalLogs: ApprovalLog[];
   workOrderNumber?: string; // 工單編號：EHS + yyyy + mm + dd + HH + MM
   areaSupervisorPermissionEmail?: string | null; // 從當前權限 config 解析的作業區域主管 email（非 DB 儲存值）
+  areaSupervisorPhone?: string | null;           // 從 AREA_SUPERVISORS_PHONE env 解析的電話
+  areaSupervisorDisplayName?: string | null;     // 從 AREA_SUPERVISORS_NAME env 解析的真實姓名
 }
 
 // 審核記錄
