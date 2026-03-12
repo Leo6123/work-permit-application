@@ -27,6 +27,7 @@ model WorkPermitApplication {
   departmentManagerEmail String?      // 部門主管 Email
   areaSupervisorEmail   String?       // 作業區域主管 Email
   applicantEmail        String?       // 申請人 Email
+  preventiveMeasures    String?       // EHS Manager 勾選的必要預防措施 (JSON string)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
   approvalLogs          ApprovalLog[]

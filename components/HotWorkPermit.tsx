@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import type { PreventiveMeasures } from "@/types/application";
 
 interface HotWorkDetails {
   personnelType: "employee" | "contractor";
@@ -19,9 +20,11 @@ interface HotWorkPermitProps {
   editable?: boolean;
   areaSupervisorPhone?: string | null;
   areaSupervisorDisplayName?: string | null;
+  initialPreventiveMeasures?: PreventiveMeasures | null;
+  onPreventiveMeasuresChange?: (data: PreventiveMeasures) => void;
 }
 
-export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd, editable = false, areaSupervisorPhone, areaSupervisorDisplayName }: HotWorkPermitProps) {
+export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeEnd, editable = false, areaSupervisorPhone, areaSupervisorDisplayName, initialPreventiveMeasures, onPreventiveMeasuresChange }: HotWorkPermitProps) {
   const endDate = new Date(workTimeEnd);
   const endDateStr = endDate.toLocaleDateString("zh-TW", {
     timeZone: "Asia/Taipei",
@@ -41,13 +44,34 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
   });
 
   // Checkbox state for right column (is/na pairs keyed by id)
-  const [cb, setCb] = useState<Record<string, boolean>>({});
-  const [lelValue, setLelValue] = useState("");
-  const [extraPatrolHours, setExtraPatrolHours] = useState("");
-  const [extraMonitorHours, setExtraMonitorHours] = useState("");
-  const [extraMeasures, setExtraMeasures] = useState("");
+  const [cb, setCb] = useState<Record<string, boolean>>(initialPreventiveMeasures?.checkboxes ?? {});
+  const [lelValue, setLelValue] = useState(initialPreventiveMeasures?.lelValue ?? "");
+  const [extraPatrolHours, setExtraPatrolHours] = useState(initialPreventiveMeasures?.extraPatrolHours ?? "");
+  const [extraMonitorHours, setExtraMonitorHours] = useState(initialPreventiveMeasures?.extraMonitorHours ?? "");
+  const [extraMeasures, setExtraMeasures] = useState(initialPreventiveMeasures?.extraMeasures ?? "");
 
-  const toggle = (key: string) => setCb((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Notify parent of changes
+  const notifyChange = useCallback((
+    newCb: Record<string, boolean>,
+    newLel: string,
+    newPatrol: string,
+    newMonitor: string,
+    newMeasures: string
+  ) => {
+    onPreventiveMeasuresChange?.({
+      checkboxes: newCb,
+      lelValue: newLel,
+      extraPatrolHours: newPatrol,
+      extraMonitorHours: newMonitor,
+      extraMeasures: newMeasures,
+    });
+  }, [onPreventiveMeasuresChange]);
+
+  const toggle = (key: string) => setCb((prev) => {
+    const next = { ...prev, [key]: !prev[key] };
+    notifyChange(next, lelValue, extraPatrolHours, extraMonitorHours, extraMeasures);
+    return next;
+  });
 
   // Renders a yes/na checkbox pair
   const renderCB = (id: string) =>
@@ -68,8 +92,8 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
       </>
     ) : (
       <>
-        <span className="w-4 text-center flex-shrink-0">☐</span>
-        <span className="w-4 text-center flex-shrink-0">☐</span>
+        <span className="w-4 text-center flex-shrink-0">{cb[`${id}_yes`] ? "☑" : "☐"}</span>
+        <span className="w-4 text-center flex-shrink-0">{cb[`${id}_na`] ? "☑" : "☐"}</span>
       </>
     );
 
@@ -268,7 +292,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
                       <input
                         type="text"
                         value={lelValue}
-                        onChange={(e) => setLelValue(e.target.value)}
+                        onChange={(e) => { setLelValue(e.target.value); notifyChange(cb, e.target.value, extraPatrolHours, extraMonitorHours, extraMeasures); }}
                         className="border-b border-black bg-gray-100 w-16 px-1 text-[10px] outline-none"
                         placeholder="_____"
                       />
@@ -308,7 +332,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
                       <input
                         type="text"
                         value={extraPatrolHours}
-                        onChange={(e) => setExtraPatrolHours(e.target.value)}
+                        onChange={(e) => { setExtraPatrolHours(e.target.value); notifyChange(cb, lelValue, e.target.value, extraMonitorHours, extraMeasures); }}
                         className="border-b border-black bg-gray-100 w-10 px-1 text-[10px] outline-none mx-1"
                         placeholder="___"
                       />
@@ -326,7 +350,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
                       <input
                         type="text"
                         value={extraMonitorHours}
-                        onChange={(e) => setExtraMonitorHours(e.target.value)}
+                        onChange={(e) => { setExtraMonitorHours(e.target.value); notifyChange(cb, lelValue, extraPatrolHours, e.target.value, extraMeasures); }}
                         className="border-b border-black bg-gray-100 w-10 px-1 text-[10px] outline-none mx-1"
                         placeholder="___"
                       />
@@ -345,7 +369,7 @@ export default function HotWorkPermit({ hotWorkDetails, workTimeStart, workTimeE
               {editable ? (
                 <textarea
                   value={extraMeasures}
-                  onChange={(e) => setExtraMeasures(e.target.value)}
+                  onChange={(e) => { setExtraMeasures(e.target.value); notifyChange(cb, lelValue, extraPatrolHours, extraMonitorHours, e.target.value); }}
                   className="border border-black w-full h-16 p-1 text-[10px] bg-gray-50 resize-none outline-none"
                   placeholder="請填寫額外預防措施..."
                 />

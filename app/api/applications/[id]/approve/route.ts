@@ -180,6 +180,11 @@ export async function POST(
       }
     }
 
+    // 如果 EHS Manager 審核通過，保存必要預防措施勾選結果
+    if (isEHSManager && data.action === "approve" && body.preventiveMeasures) {
+      updateData.preventiveMeasures = JSON.stringify(body.preventiveMeasures);
+    }
+
     const updatedApplication = await prisma.workPermitApplication.update({
       where: { id: params.id },
       data: updateData,
