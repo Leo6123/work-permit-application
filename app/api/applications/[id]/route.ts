@@ -48,6 +48,7 @@ export async function GET(
       hazardFactors: JSON.parse(application.hazardFactors),
       hazardousOperations,
       personnelInfo: JSON.parse(application.personnelInfo),
+      preventiveMeasures: application.preventiveMeasures ? JSON.parse(application.preventiveMeasures) : null,
       workOrderNumber: getWorkOrderNumberFromDate(application.createdAt),
       areaSupervisorPermissionEmail,
       areaSupervisorPhone,

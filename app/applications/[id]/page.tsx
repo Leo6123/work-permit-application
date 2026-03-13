@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Shield, ArrowLeft, CheckCircle, Clock, XCircle, AlertCircle, User, Building, Calendar, MapPin, FileText, Users, Hash, Download, Printer } from "lucide-react";
-import type { ApplicationWithLogs, ApprovalAction } from "@/types/application";
+import type { ApplicationWithLogs, ApprovalAction, PreventiveMeasures } from "@/types/application";
 import { getWorkOrderNumberFromDate } from "@/lib/workOrderNumber";
 import { useRef } from "react";
 import HotWorkPermit from "@/components/HotWorkPermit";
@@ -24,6 +24,7 @@ export default function ApplicationDetailPage() {
     comment: "",
     fireWatcherName: "",
   });
+  const [preventiveMeasures, setPreventiveMeasures] = useState<PreventiveMeasures | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
   const [pdfTemplateHtml, setPdfTemplateHtml] = useState<string | null>(null);
@@ -109,7 +110,7 @@ export default function ApplicationDetailPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(approvalData),
+        body: JSON.stringify({ ...approvalData, preventiveMeasures }),
       });
 
       const result = await response.json();
@@ -226,8 +227,8 @@ export default function ApplicationDetailPage() {
   };
 
   // 檢查是否應該顯示熱加工操作許可證（在所有 hooks 之前計算）
-  const shouldShowHotWorkPermit = application && 
-    (application.status === "pending_manager" || application.status === "approved") &&
+  const shouldShowHotWorkPermit = application &&
+    (application.status === "pending_ehs" || application.status === "pending_manager" || application.status === "approved") &&
     application.hazardousOperations?.hotWork === "yes" &&
     application.hazardousOperations?.hotWorkDetails;
   
@@ -1238,6 +1239,8 @@ export default function ApplicationDetailPage() {
                 editable={isEHSManagerApproval && !!canApprove}
                 areaSupervisorPhone={application.areaSupervisorPhone}
                 areaSupervisorDisplayName={application.areaSupervisorDisplayName}
+                initialPreventiveMeasures={application.preventiveMeasures}
+                onPreventiveMeasuresChange={isEHSManagerApproval && canApprove ? setPreventiveMeasures : undefined}
               />
             )}
           </div>

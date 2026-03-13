@@ -44,6 +44,15 @@ export interface HazardousOperations {
   hotWorkDetails?: HotWorkDetails;  // 動火作業詳細資訊
 }
 
+// EHS Manager 勾選的必要預防措施（動火作業許可證第2部分）
+export interface PreventiveMeasures {
+  checkboxes: Record<string, boolean>;  // 各勾選項目狀態（如 pump_yes, z35_cover_na 等）
+  lelValue?: string;                     // LEL 讀數
+  extraPatrolHours?: string;             // 額外防火巡查小時
+  extraMonitorHours?: string;            // 額外防火監控小時
+  extraMeasures?: string;                // 必要的額外預防措施
+}
+
 // 承攬商資訊
 export interface ContractorInfo {
   name: string;                    // 承攬商名稱
@@ -108,6 +117,7 @@ export interface ApplicationWithLogs {
   departmentManagerEmail: string | null;
   areaSupervisorEmail: string | null;
   applicantEmail: string | null;
+  preventiveMeasures: PreventiveMeasures | null;
   createdAt: Date;
   updatedAt: Date;
   approvalLogs: ApprovalLog[];
