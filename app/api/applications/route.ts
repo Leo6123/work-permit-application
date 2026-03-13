@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
       hazardFactors: JSON.parse(app.hazardFactors),
       hazardousOperations: JSON.parse(app.hazardousOperations),
       personnelInfo: JSON.parse(app.personnelInfo),
+      preventiveMeasures: app.preventiveMeasures ? JSON.parse(app.preventiveMeasures) : null,
       workOrderNumber: getWorkOrderNumberFromDate(app.createdAt),
     }));
 
