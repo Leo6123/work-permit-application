@@ -1109,6 +1109,35 @@ export default function ApplicationDetailPage() {
           </div>
         )}
 
+        {/* 熱加工操作許可證（EHS 審核時顯示在審核表單前方，方便先勾選再提交） */}
+        {shouldShowHotWorkPermit && hotWorkDetails && isEHSManagerApproval && canApprove && (
+          <div id="hot-work-permit" className="bg-white text-black print:block">
+            {isLoadingTemplate && (
+              <div className="p-8 text-center">
+                <p className="text-slate-400">載入 PDF 範本中...</p>
+              </div>
+            )}
+            {!isLoadingTemplate && pdfTemplateHtml && (
+              <div
+                className="pdf-template-container"
+                dangerouslySetInnerHTML={{ __html: pdfTemplateHtml }}
+              />
+            )}
+            {!isLoadingTemplate && !pdfTemplateHtml && (
+              <HotWorkPermit
+                hotWorkDetails={hotWorkDetails}
+                workTimeStart={application.workTimeStart}
+                workTimeEnd={application.workTimeEnd}
+                editable={true}
+                areaSupervisorPhone={application.areaSupervisorPhone}
+                areaSupervisorDisplayName={application.areaSupervisorDisplayName}
+                initialPreventiveMeasures={application.preventiveMeasures}
+                onPreventiveMeasuresChange={setPreventiveMeasures}
+              />
+            )}
+          </div>
+        )}
+
         {/* 審核表單（僅具該角色權限的登入者可見） */}
         {(application.status === "pending_area_supervisor" || application.status === "pending_ehs" || application.status === "pending_manager") && !canApprove && currentUser && (
           <div className="bg-slate-900/30 border border-slate-600 p-4 rounded-lg text-slate-400 text-sm">
@@ -1216,8 +1245,8 @@ export default function ApplicationDetailPage() {
           </div>
         )}
 
-        {/* 熱加工操作許可證 */}
-        {shouldShowHotWorkPermit && hotWorkDetails && (
+        {/* 熱加工操作許可證（非 EHS 審核時：pending_manager / approved 唯讀顯示） */}
+        {shouldShowHotWorkPermit && hotWorkDetails && !(isEHSManagerApproval && canApprove) && (
           <div id="hot-work-permit" className="bg-white text-black print:block">
             {/* 如果 PDF 範本載入成功，顯示轉換後的 HTML */}
             {isLoadingTemplate && (
